@@ -1,9 +1,9 @@
-# Instruction for creating a gRPC client for google cloud services
+# Instructions for create a gRPC client for google cloud services
 
 ## Overview
 
-This instruction includes step by step guide for creating a gRPC 
-client to test the new google cloud service from an empty linux 
+This instruction includes a step by step guide for creating a gRPC 
+client to test the google cloud service from an empty linux 
 VM, using GCE ubuntu 16.04 TLS instance.
 
 The main steps are followed as steps below: 
@@ -15,10 +15,6 @@ The main steps are followed as steps below:
 
 ## Environment Prerequisite
 
-**Linux**
-```sh
-$ [sudo] apt-get install build-essential autoconf libtool pkg-config zip unzip zlib1g-dev
-```
 **Nodejs**
 ```sh
 $ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.4/install.sh | bash
@@ -39,17 +35,17 @@ The command using plugin looks like
 ```sh
 $ mkdir $HOME/project-node
 $ grpc_tools_node_protoc --proto_path=./ \
---js_out=import_style=commonjs,binary:=$HOME/project-node \  
---grpc_out==$HOME/project-node \
+--js_out=import_style=commonjs,binary:=$HOME/project-node \
+--grpc_out=project-node \
 --plugin=protoc-gen-grpc=which grpc_tools_node_protoc_plugin \
-/path/to/your/proto_dependency_directory1/*.proto \
-/path/to/your/proto_dependency_directory2/*.proto \
-/path/to/your/proto_directory/*.proto
+path/to/your/proto_dependency_directory1/*.proto \
+path/to/your/proto_dependency_directory2/*.proto \
+path/to/your/proto_directory/*.proto
 ```
 
 Since most of cloud services already publish proto files under 
-[googleapis github repo](https://github.com/googleapis/googleapis), I
-recommend use it's Makefile to generate the client API.
+[googleapis github repo](https://github.com/googleapis/googleapis),
+you can generate the client API by using it's Makefile.
 The `Makefile` will help you generate the client API as
 well as all the dependencies. The command will simply be:
 ```sh
