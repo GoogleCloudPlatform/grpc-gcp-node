@@ -33,14 +33,43 @@ $ npm install -g grpc-tools
 The plugin is installed with grpc-tools.
 The command using plugin looks like
 ```sh
-$ mkdir $HOME/project-node
+$ mkdir $HOME/project-node && cd $HOME/project-node
 $ grpc_tools_node_protoc --proto_path=./ \
---js_out=import_style=commonjs,binary:=$HOME/project-node \
---grpc_out=project-node \
+--js_out=import_style=commonjs,binary:=./ \
+--grpc_out=./ \
 --plugin=protoc-gen-grpc=which grpc_tools_node_protoc_plugin \
 path/to/your/proto_dependency_directory1/*.proto \
 path/to/your/proto_dependency_directory2/*.proto \
 path/to/your/proto_directory/*.proto
+```
+
+Take `Firestore` service under [googleapis github repo](https://github.com/googleapis/googleapis) 
+for example.
+The proto files required are
+```
+google/api/annotations.proto
+google/api/http.proto
+google/api/httpbody.proto
+google/longrunning/operations.proto
+google/rpc/code.proto
+google/rpc/error_details.proto
+google/rpc/status.proto
+google/type/latlng.proto
+google/firestore/v1beta1/firestore.proto
+google/firestore/v1beta1/common.proto
+google/firestore/v1beta1/query.proto
+google/firestore/v1beta1/write.proto
+google/firestore/v1beta1/document.proto
+```
+Thus the command generating client API is
+```sh
+$ grpc_tools_node_protoc --proto_path=googleapis --js_out=i
+mport_style=commonjs,binary:./ --grpc_out=./ \
+google/api/annotations.proto google/api/http.proto google/api/httpbody.proto \
+google/longrunning/operations.proto google/rpc/code.proto google/rpc/error_details.proto \
+google/rpc/status.proto google/type/latlng.proto google/firestore/v1beta1/firestore.proto \
+google/firestore/v1beta1/common.proto google/firestore/v1beta1/query.proto \
+google/firestore/v1beta1/write.proto google/firestore/v1beta1/document.proto
 ```
 
 Since most of cloud services already publish proto files under 
