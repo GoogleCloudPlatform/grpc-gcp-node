@@ -4,7 +4,8 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "./node_modules/.bin/mocha --reporter spec",
+    "lint": "./node_modules/.bin/eslint src/ test/integration"
   },
   "repository": {
     "type": "git",
@@ -29,7 +30,12 @@
     "grpc": "^1.14.1"
   },
   "devDependencies": {
+    "eslint": "^5.4.0",
+    "eslint-config-prettier": "^3.0.1",
+    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-prettier": "^2.6.2",
     "grpc-tools": "^1.6.6",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "prettier": "^1.14.2"
   }
 }
