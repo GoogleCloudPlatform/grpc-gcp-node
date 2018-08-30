@@ -4,7 +4,7 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -24,5 +24,12 @@
   "homepage": "https://github.com/GoogleCloudPlatform/grpc-gcp-node#readme",
   "engines": {
     "node": ">=4"
+  },
+  "dependencies": {
+    "grpc": "^1.14.1"
+  },
+  "devDependencies": {
+    "grpc-tools": "^1.6.6",
+    "mocha": "^5.2.0"
   }
 }

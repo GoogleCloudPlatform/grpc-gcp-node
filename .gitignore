@@ -1,0 +1,9 @@
+.DS_Store
+.vscode
+build/
+node_modules/
+package-lock.json
+
+# generated code for tests
+grpc-gcp/test/google
+
