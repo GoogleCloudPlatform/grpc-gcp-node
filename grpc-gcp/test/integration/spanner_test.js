@@ -22,16 +22,64 @@
 
 'use strict';
 
+const assert = require('assert');
 const grpc = require('grpc');
+const {GoogleAuth} = require('google-auth-library');
+const spanner_grpc = require('../google/spanner/v1/spanner_grpc_pb.js');
+const spanner = require('../google/spanner/v1/spanner_pb.js');
+
+const _TARGET = 'spanner.googleapis.com:443';
+const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
+const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
+
+/**
+ * Client to use to make requests to Spanner target.
+ */
+var client;
 
 describe('Spanner integration tests', function() {
-    before(function(done) {
-      //TODO: init client
-    });
-    after(function() {
-      //TODO: clean client
-    });
-    it('should return result', function(done) {
-      //TODO: add test
+  before(function(done) {
+    var authFactory = new GoogleAuth();
+    authFactory.getApplicationDefault((err, auth) => {
+      assert.ifError(err);
+
+      if (auth.createScopedRequired && auth.createScopedRequired()) {
+        var scopes = [_OAUTH_SCOPE];
+        auth = auth.createScoped(scopes);
+      }
+      var sslCreds = grpc.credentials.createSsl();
+      var callCreds = grpc.credentials.createFromGoogleCredential(auth);
+      var channelCreds = grpc.credentials.combineChannelCredentials(
+        sslCreds,
+        callCreds
+      );
+      client = new spanner_grpc.SpannerClient(_TARGET, channelCreds);
+      done();
     });
   });
+
+  it('Get session should return correct result', function(done) {
+    var createSessionRequest = new spanner.CreateSessionRequest();
+    createSessionRequest.setDatabase(_DATABASE);
+    client.createSession(createSessionRequest, (err, session) => {
+      assert.ifError(err);
+      var sessionName = session.getName();
+
+      var getSessionRequest = new spanner.GetSessionRequest();
+      getSessionRequest.setName(sessionName);
+
+      client.getSession(getSessionRequest, (err, sessionResult) => {
+        assert.ifError(err);
+        assert.strictEqual(sessionResult.getName(), sessionName);
+
+        var deleteSessionRequest = new spanner.DeleteSessionRequest();
+        deleteSessionRequest.setName(sessionName);
+
+        client.deleteSession(deleteSessionRequest, err => {
+          assert.ifError(err);
+          done();
+        });
+      });
+    });
+  });
+});

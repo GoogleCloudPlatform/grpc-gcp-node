@@ -24,8 +24,6 @@
 
 const grpc = require('grpc');
 
-class GcpChannelFactory extends grpc.Channel {
-    constructor() {
+class GcpChannelFactory extends grpc.Channel {}
 
-    }
-}
+module.exports = GcpChannelFactory;
