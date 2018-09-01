@@ -31,6 +31,7 @@ const spanner = require('../google/spanner/v1/spanner_pb.js');
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
+const _TEST_SQL = 'select id from storage';
 
 /**
  * Client to use to make requests to Spanner target.
@@ -58,7 +59,7 @@ describe('Spanner integration tests', function() {
     });
   });
 
-  it('Get session should return correct result', function(done) {
+  it('Test createSession, getSession, listSessions, deleteSession', function(done) {
     var createSessionRequest = new spanner.CreateSessionRequest();
     createSessionRequest.setDatabase(_DATABASE);
     client.createSession(createSessionRequest, (err, session) => {
@@ -82,4 +83,34 @@ describe('Spanner integration tests', function() {
       });
     });
   });
+
+  it ('Test executeSql', function(done) {
+    var createSessionRequest = new spanner.CreateSessionRequest();
+    createSessionRequest.setDatabase(_DATABASE);
+    client.createSession(createSessionRequest, (err, session) => {
+      assert.ifError(err);
+      var sessionName = session.getName();
+
+      var executeSqlRequest = new spanner.ExecuteSqlRequest();
+      executeSqlRequest.setSession(sessionName);
+      executeSqlRequest.setSql(_TEST_SQL);
+
+      client.executeSql(executeSqlRequest, (err, resultSet) => {
+        assert.ifError(err);
+        assert.notEqual(resultSet, null);
+        var rowsList = resultSet.getRowsList();
+        var value = rowsList[0].getValuesList()[0].getStringValue();
+        assert.equal(value, 'payload');
+
+        var deleteSessionRequest = new spanner.DeleteSessionRequest();
+        deleteSessionRequest.setName(sessionName);
+
+        client.deleteSession(deleteSessionRequest, err => {
+          assert.ifError(err);
+          done();
+        });
+      });
+    });
+  });
+
 });
