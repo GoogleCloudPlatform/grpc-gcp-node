@@ -23,7 +23,53 @@
 'use strict';
 
 const grpc = require('grpc');
+const _ = require('lodash');
 
-class GcpChannelFactory extends grpc.Channel {}
+class GcpChannelFactory {
+  constructor(address, credentials, options) {
+    this._maxSize = 10;
+    this._maxConcurrentStreamsLowWatermark = 100;
+    var gcpApiConfig = options.gcpApiConfig;
+    if (gcpApiConfig) {
+      var channelPool = gcpApiConfig.channelPool;
+      if (channelPool) {
+        if (channelPool.maxSize) this._maxSize = channelPool.maxSize;
+        if (channelPool._maxConcurrentStreamsLowWatermark) {
+          this._maxConcurrentStreamsLowWatermark =
+            channelPool._maxConcurrentStreamsLowWatermark;
+        }
+      }
+      var affinityByMethod = gcpApiConfig.affinityByMethod;
+      if (affinityByMethod) {
+        this._affinityByMethod = affinityByMethod;
+      }
+    }
+    this._options = _.omit(options, 'gcpApiConfig');
+    this._affinityKeyToChannelRef = {};
+    this._channelRefs = [];
+    this._target = address;
+    
+  }
+
+  close() {
+
+  }
+
+  getTarget() {
+    return this._target;
+  }
+
+  getConnectivityState(tryToConnect) {
+
+  }
+
+  watchConnectivityState(currentState, deadline, callback) {
+
+  }
+
+  createCall(method, deadline, host, parentCall, propagateFlags) {
+
+  }
+}
 
 module.exports = GcpChannelFactory;
