@@ -34,7 +34,7 @@ class ChannelRef {
     this._affinityCount++;
   }
 
-  activeStreamsCount() {
+  activeStreamsCountIncr() {
     this._activeStreamsCount++;
   }
 
