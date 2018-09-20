@@ -17,3 +17,13 @@
  */
 
 'use strict';
+
+exports.GcpCallInvoker = require('./src/gcp_call_invoker');
+exports.GcpChannelFactory = require('./src/gcp_channel_factory');
+
+const grpcGcpMessage = require('./src/generated/grpc_gcp_pb');
+
+exports.ApiConfig = grpcGcpMessage.ApiConfig;
+exports.ChannelPoolConfig = grpcGcpMessage.ChannelPoolConfig;
+exports.AffinityConfig = grpcGcpMessage.AffinityConfig;
+exports.MethodConfig = grpcGcpMessage.MethodConfig;
