@@ -38,6 +38,14 @@ class ChannelRef {
     this._activeStreamsCount++;
   }
 
+  affinityCountDecr() {
+    this._affinityCount--;
+  }
+
+  activeStreamsCountDecr() {
+    this._activeStreamsCount--;
+  }
+
   getAffinityCount() {
     return this._affinityCount;
   }
