@@ -33,15 +33,108 @@ const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
 const _TEST_SQL = 'select id from storage';
 
+const _MAX_SIZE = 10;
+const _LOW_WATERMARK = 1;
+
 const grpcGcp = require('../..');
 
-/**
- * Client to use to make requests to Spanner target.
- */
-var client;
+var initApiConfig = function(apiConfig) {
+  function addMethod(apiConfig, methodName, command, affinityKey) {
+    var affinityConfig = new grpcGcp.AffinityConfig();
+    affinityConfig.setCommand(command);
+    affinityConfig.setAffinityKey(affinityKey);
+    var methodConfig = new grpcGcp.MethodConfig();
+    methodConfig.addName(methodName);
+    methodConfig.setAffinity(affinityConfig);
+    apiConfig.addMethod(methodConfig);
+  }
 
-describe('Spanner integration tests', function() {
-  before(function(done) {
+  apiConfig.setChannelPool(
+    new grpcGcp.ChannelPoolConfig({
+      maxSize: _MAX_SIZE,
+      maxConcurrentStreamsLowWatermark: _LOW_WATERMARK,
+    })
+  );
+
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/CreateSession',
+    grpcGcp.AffinityConfig.Command.BIND,
+    'name'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/GetSession',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'name'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/DeleteSession',
+    grpcGcp.AffinityConfig.Command.UNBIND,
+    'name'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/ExecuteSql',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/ExecuteStreamingSql',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/Read',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/StreamingRead',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/BeginTransaction',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/Commit',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/Rollback',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/PartitionQuery',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+  addMethod(
+    apiConfig,
+    '/google.spanner.v1.Spanner/PartitionRead',
+    grpcGcp.AffinityConfig.Command.BOUND,
+    'session'
+  );
+};
+
+describe('Spanner integration tests', () => {
+  let client;
+  let pool;
+
+  beforeEach(done => {
     var authFactory = new GoogleAuth();
     authFactory.getApplicationDefault((err, auth) => {
       assert.ifError(err);
@@ -56,50 +149,8 @@ describe('Spanner integration tests', function() {
         callCreds
       );
 
-      function addMethod(apiConfig, methodName, command, affinityKey) {
-        apiConfig.addMethod(
-          new grpcGcp.MethodConfig({
-            name: '/google.spanner.v1.Spanner/CreateSession',
-            affinity: new grpcGcp.AffinityConfig({
-              command: command,
-              affinityKey: affinityKey,
-            }),
-          })
-        );
-      }
-
       var apiConfig = new grpcGcp.ApiConfig();
-      apiConfig.setChannelPool(
-        new grpcGcp.ChannelPoolConfig({
-          maxSize: 10,
-          maxConcurrentStreamsLowWatermark: 1,
-        })
-      );
-
-      addMethod(
-        apiConfig,
-        '/google.spanner.v1.Spanner/CreateSession',
-        grpcGcp.AffinityConfig.Command.BIND,
-        'name'
-      );
-      addMethod(
-        apiConfig,
-        '/google.spanner.v1.Spanner/GetSession',
-        grpcGcp.AffinityConfig.Command.BOUND,
-        'name'
-      );
-      addMethod(
-        apiConfig,
-        '/google.spanner.v1.Spanner/DeleteSession',
-        grpcGcp.AffinityConfig.Command.UNBIND,
-        'name'
-      );
-      addMethod(
-        apiConfig,
-        '/google.spanner.v1.Spanner/ExecuteSql',
-        grpcGcp.AffinityConfig.Command.BOUND,
-        'session'
-      );
+      initApiConfig(apiConfig);
 
       var channelOptions = {
         channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
@@ -113,11 +164,13 @@ describe('Spanner integration tests', function() {
         channelOptions
       );
 
+      pool = client.getChannel();
+
       done();
     });
   });
 
-  it('Test createSession, getSession, listSessions, deleteSession', function(done) {
+  it('Test create, get, list, delete session', done => {
     var createSessionRequest = new spanner.CreateSessionRequest();
     createSessionRequest.setDatabase(_DATABASE);
     client.createSession(createSessionRequest, (err, session) => {
@@ -131,71 +184,162 @@ describe('Spanner integration tests', function() {
         assert.ifError(err);
         assert.strictEqual(sessionResult.getName(), sessionName);
 
-        var deleteSessionRequest = new spanner.DeleteSessionRequest();
-        deleteSessionRequest.setName(sessionName);
-
-        client.deleteSession(deleteSessionRequest, err => {
+        var listSessionsRequest = new spanner.ListSessionsRequest();
+        listSessionsRequest.setDatabase(_DATABASE);
+        client.listSessions(listSessionsRequest, (err, response) => {
           assert.ifError(err);
-          done();
+          var sessionsList = response.getSessionsList();
+          var sessionNames = sessionsList.map(session => session.getName());
+          assert(sessionNames.includes(sessionName));
+
+          var deleteSessionRequest = new spanner.DeleteSessionRequest();
+          deleteSessionRequest.setName(sessionName);
+          client.deleteSession(deleteSessionRequest, err => {
+            assert.ifError(err);
+            done();
+          });
         });
       });
     });
   });
 
-  it('Test executeSql', function(done) {
+  it('Test executeSql', done => {
     var createSessionRequest = new spanner.CreateSessionRequest();
     createSessionRequest.setDatabase(_DATABASE);
     client.createSession(createSessionRequest, (err, session) => {
       assert.ifError(err);
       var sessionName = session.getName();
 
+      assert.strictEqual(pool._channelRefs.length, 1);
+      assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
+      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+
       var executeSqlRequest = new spanner.ExecuteSqlRequest();
       executeSqlRequest.setSession(sessionName);
       executeSqlRequest.setSql(_TEST_SQL);
-
       client.executeSql(executeSqlRequest, (err, resultSet) => {
         assert.ifError(err);
         assert.notStrictEqual(resultSet, null);
         var rowsList = resultSet.getRowsList();
         var value = rowsList[0].getValuesList()[0].getStringValue();
+
         assert.strictEqual(value, 'payload');
+        assert.strictEqual(pool._channelRefs.length, 1);
+        assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
+        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
 
         var deleteSessionRequest = new spanner.DeleteSessionRequest();
         deleteSessionRequest.setName(sessionName);
 
         client.deleteSession(deleteSessionRequest, err => {
           assert.ifError(err);
+          assert.strictEqual(pool._channelRefs.length, 1);
+          assert.strictEqual(pool._channelRefs[0]._affinityCount, 0);
+          assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
           done();
         });
       });
     });
   });
 
-  it('Test executeStreamingSql', function(done) {
+  it('Test executeStreamingSql', done => {
     var createSessionRequest = new spanner.CreateSessionRequest();
     createSessionRequest.setDatabase(_DATABASE);
     client.createSession(createSessionRequest, (err, session) => {
       assert.ifError(err);
-      console.log('---Created session---');
       var sessionName = session.getName();
+
+      assert.strictEqual(pool._channelRefs.length, 1);
+      assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
+      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
 
       var executeSqlRequest = new spanner.ExecuteSqlRequest();
       executeSqlRequest.setSession(sessionName);
-      executeSqlRequest.setSql('select data from storage');
-
+      executeSqlRequest.setSql(_TEST_SQL);
       var call = client.executeStreamingSql(executeSqlRequest);
-      call.on('data', function(partialResultSet) {
-        console.log('Found partial result!');
+
+      assert.strictEqual(pool._channelRefs.length, 1);
+      assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
+      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 1);
+
+      call.on('data', partialResultSet => {
+        var value = partialResultSet.getValuesList()[0].getStringValue();
+        assert.strictEqual(value, 'payload');
       });
+
+      call.on('status', status => {
+        assert.strictEqual(status.code, grpc.status.OK);
+        assert.strictEqual(pool._channelRefs.length, 1);
+        assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
+        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+      });
+
       call.on('end', function() {
         var deleteSessionRequest = new spanner.DeleteSessionRequest();
         deleteSessionRequest.setName(sessionName);
         client.deleteSession(deleteSessionRequest, err => {
           assert.ifError(err);
+          assert.strictEqual(pool._channelRefs.length, 1);
+          assert.strictEqual(pool._channelRefs[0]._affinityCount, 0);
+          assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
           done();
-          console.log('---Deleted session---');
         });
       });
     });
+  });
+
+  xit('Test concurrent streams wartermark', () => {
+    var watermark = 2;
+    pool._maxConcurrentStreamsLowWatermark = watermark;
+
+    var createSessionRequest = new spanner.CreateSessionRequest();
+    createSessionRequest.setDatabase(_DATABASE);
+
+    var sessionList = [];
+    var callList = [];
+
+    // When active streams have not reached the concurrent_streams_watermark,
+    // gRPC calls should be reusing the same channel.
+    for (let i = 0; i < watermark; i++) {
+      client.createSession(createSessionRequest, (err, session) => {
+        assert.ifError(err);
+        assert.strictEqual(pool._channelRefs.length, 1);
+        assert.strictEqual(pool._channelRefs[0]._affinityCount, i + 1);
+        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, i);
+
+        sessionList.push(session.getName());
+
+        var executeSqlRequest = new spanner.ExecuteSqlRequest();
+        executeSqlRequest.setSession(session.getName());
+        executeSqlRequest.setSql(_TEST_SQL);
+        var call = client.executeStreamingSql(executeSqlRequest);
+
+        assert.strictEqual(pool._channelRefs.length, 1);
+        assert.strictEqual(pool._channelRefs[0]._affinityCount, i + 1);
+        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, i + 1);
+
+        callList.push(call);
+      });
+
+      // When active streams reach the concurrent_streams_watermark,
+      // channel pool will create a new channel.
+      client.createSession(createSessionRequest, (err, session) => {
+        assert.ifError(err);
+        assert.strictEqual(pool._channelRefs.length, 2);
+        assert.strictEqual(pool._channelRefs[0]._affinityCount, 2);
+        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, watermark);
+        console.log(pool._channelRefs);
+
+        sessionList.push(session.getName());
+      });
+
+      sessionList.forEach(sessionName => {
+        var deleteSessionRequest = new spanner.DeleteSessionRequest();
+        deleteSessionRequest.setName(sessionName);
+        client.deleteSession(deleteSessionRequest, err => {
+          assert.ifError(err);
+        });
+      });
+    }
   });
 });
