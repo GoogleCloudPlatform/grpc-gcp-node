@@ -30,7 +30,6 @@ const grpc = require('grpc');
 const util = require('util');
 const _ = require('lodash');
 
-exports.GcpCallInvoker = require('./src/gcp_call_invoker');
 exports.GcpChannelFactory = GcpChannelFactory;
 
 exports.ApiConfig = ApiConfig;
@@ -97,7 +96,6 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
   // });
 
   var boundKey = preProcessResult.boundKey;
-
   var postProcessArgs = {
     channelFactory: channelFactory,
     channelRef: channelRef,
@@ -205,10 +203,10 @@ var postProcess = function(
   boundKey,
   responseMsg
 ) {
-  if (!channelFactory || !boundKey || !responseMsg) return;
+  if (!channelFactory || !responseMsg) return;
   var affinityConfig = channelFactory.getAffinityConfig(path);
   if (affinityConfig && affinityConfig.getCommand()) {
-    var command = affinityConfig.getCommand;
+    var command = affinityConfig.getCommand();
     if (command === AffinityConfig.Command.BIND) {
       var affinityKey = getAffinityKeyFromMessage(
         affinityConfig.getAffinityKey(),
@@ -229,10 +227,10 @@ var getAffinityKeyFromMessage = function(affinityKeyName, message) {
   var currMessage = message;
   var names = affinityKeyName.split('.');
   if (names) {
-    for (let name in names) {
+    names.forEach(name => {
       let getter = 'get' + name.charAt(0).toUpperCase() + name.substr(1);
       currMessage = currMessage[getter]();
-    }
+    });
     if (currMessage) return currMessage;
   }
   throw new Error(

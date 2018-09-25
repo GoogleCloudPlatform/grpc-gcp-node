@@ -109,11 +109,10 @@ class GcpChannelFactory {
 
   bind(channelRef, affinityKey) {
     var existingChannelRef = this._affinityKeyToChannelRef[affinityKey];
-    if (existingChannelRef) {
-      existingChannelRef.affinityCountIncr();
-    } else {
+    if (!existingChannelRef) {
       this._affinityKeyToChannelRef[affinityKey] = channelRef;
     }
+    this._affinityKeyToChannelRef[affinityKey].affinityCountIncr();
   }
 
   unbind(boundKey) {
@@ -130,7 +129,7 @@ class GcpChannelFactory {
     this._channelRefs.forEach(ref => {
       ref.getChannel().close();
     });
-    this._isClosed = true;
+    //this._isClosed = true;
   }
 
   getTarget() {
@@ -141,7 +140,16 @@ class GcpChannelFactory {
 
   watchConnectivityState(currentState, deadline, callback) {}
 
-  createCall(method, deadline, host, parentCall, propagateFlags) {}
+  createCall(method, deadline, host, parentCall, propagateFlags) {
+    var grpcChannel = this.getChannelRef().getChannel();
+    return grpcChannel.createCall(
+      method,
+      deadline,
+      host,
+      parentCall,
+      propagateFlags
+    );
+  }
 }
 
 module.exports = GcpChannelFactory;
