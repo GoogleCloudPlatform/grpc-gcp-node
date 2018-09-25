@@ -288,58 +288,68 @@ describe('Spanner integration tests', () => {
     });
   });
 
-  xit('Test concurrent streams wartermark', () => {
-    var watermark = 2;
+  it('Test concurrent streams wartermark', done => {
+    var watermark = 5;
     pool._maxConcurrentStreamsLowWatermark = watermark;
 
-    var createSessionRequest = new spanner.CreateSessionRequest();
-    createSessionRequest.setDatabase(_DATABASE);
+    var expectedNumChannels = 3;
 
-    var sessionList = [];
-    var callList = [];
+    var createCallPromises = [];
 
-    // When active streams have not reached the concurrent_streams_watermark,
-    // gRPC calls should be reusing the same channel.
-    for (let i = 0; i < watermark; i++) {
-      client.createSession(createSessionRequest, (err, session) => {
-        assert.ifError(err);
-        assert.strictEqual(pool._channelRefs.length, 1);
-        assert.strictEqual(pool._channelRefs[0]._affinityCount, i + 1);
-        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, i);
+    for (let i = 0; i < watermark * expectedNumChannels; i++) {
+      var promise = new Promise((resolve, reject) => {
+        var createSessionRequest = new spanner.CreateSessionRequest();
+        createSessionRequest.setDatabase(_DATABASE);
+        client.createSession(createSessionRequest, (err, session) => {
+          if (err) {
+            reject(err);
+          } else {
+            var executeSqlRequest = new spanner.ExecuteSqlRequest();
+            executeSqlRequest.setSession(session.getName());
+            executeSqlRequest.setSql(_TEST_SQL);
+            var call = client.executeStreamingSql(executeSqlRequest);
 
-        sessionList.push(session.getName());
-
-        var executeSqlRequest = new spanner.ExecuteSqlRequest();
-        executeSqlRequest.setSession(session.getName());
-        executeSqlRequest.setSql(_TEST_SQL);
-        var call = client.executeStreamingSql(executeSqlRequest);
-
-        assert.strictEqual(pool._channelRefs.length, 1);
-        assert.strictEqual(pool._channelRefs[0]._affinityCount, i + 1);
-        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, i + 1);
-
-        callList.push(call);
-      });
-
-      // When active streams reach the concurrent_streams_watermark,
-      // channel pool will create a new channel.
-      client.createSession(createSessionRequest, (err, session) => {
-        assert.ifError(err);
-        assert.strictEqual(pool._channelRefs.length, 2);
-        assert.strictEqual(pool._channelRefs[0]._affinityCount, 2);
-        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, watermark);
-        console.log(pool._channelRefs);
-
-        sessionList.push(session.getName());
-      });
-
-      sessionList.forEach(sessionName => {
-        var deleteSessionRequest = new spanner.DeleteSessionRequest();
-        deleteSessionRequest.setName(sessionName);
-        client.deleteSession(deleteSessionRequest, err => {
-          assert.ifError(err);
+            resolve({
+              call: call,
+              sessionName: session.getName(),
+            });
+          }
         });
       });
+      createCallPromises.push(promise);
     }
+
+    Promise.all(createCallPromises).then(results => {
+      assert.strictEqual(pool._channelRefs.length, expectedNumChannels);
+      assert.strictEqual(pool._channelRefs[0]._affinityCount, watermark);
+      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, watermark);
+
+      // Consume streaming calls.
+      var emitterPromises = results.map(
+        result =>
+          new Promise((resolve, reject) => {
+            result.call.on('data', partialResultSet => {
+              var value = partialResultSet.getValuesList()[0].getStringValue();
+              assert.strictEqual(value, 'payload');
+            });
+            result.call.on('end', () => {
+              var deleteSessionRequest = new spanner.DeleteSessionRequest();
+              deleteSessionRequest.setName(result.sessionName);
+              client.deleteSession(deleteSessionRequest, err => {
+                assert.ifError(err);
+                resolve();
+              });
+            });
+          })
+      );
+
+      // Make sure all sessions get cleaned.
+      Promise.all(emitterPromises).then(() => {
+        assert.strictEqual(pool._channelRefs.length, expectedNumChannels);
+        assert.strictEqual(pool._channelRefs[0]._affinityCount, 0);
+        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+        done();
+      });
+    });
   });
 });

@@ -49,7 +49,6 @@ class GcpChannelFactory {
     this._target = address;
     this._credentials = credentials;
     this._isClosed = false;
-    // this._lock = new AsyncLock();
   }
 
   _initMethodToAffinityMap(gcpApiConfig) {
