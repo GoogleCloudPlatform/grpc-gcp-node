@@ -4,7 +4,8 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "index.js",
   "scripts": {
-    "integration-test": "./node_modules/.bin/mocha test/integration/*.js --reporter spec --timeout 600000",
+    "integration-tests": "./node_modules/.bin/mocha test/integration/*.js --reporter spec --timeout 600000",
+    "unit-tests": "./node_modules/.bin/mocha test/unit/*.js --reporter spec",
     "lint": "./node_modules/.bin/eslint src/ test/integration",
     "prettier": "prettier --write src/*.js src/*/*.js test/*.js test/*/*.js"
   },
