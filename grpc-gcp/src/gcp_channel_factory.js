@@ -30,6 +30,14 @@ const CLIENT_CHANNEL_ID = 'grpc_gcp.client_channel.id';
 
 class GcpChannelFactory {
   constructor(address, credentials, options) {
+    if (!options) {
+      options = {};
+    }
+    if (typeof options !== 'object') {
+      throw new TypeError(
+        'Channel options must be an object with string keys and integer or string values'
+      );
+    }
     this._maxSize = 10;
     this._maxConcurrentStreamsLowWatermark = 100;
     var gcpApiConfig = options.gcpApiConfig;
@@ -49,6 +57,7 @@ class GcpChannelFactory {
     this._target = address;
     this._credentials = credentials;
     this._isClosed = false;
+    this.getChannelRef();
   }
 
   _initMethodToAffinityMap(gcpApiConfig) {
@@ -128,16 +137,21 @@ class GcpChannelFactory {
     this._channelRefs.forEach(ref => {
       ref.getChannel().close();
     });
-    //this._isClosed = true;
   }
 
   getTarget() {
     return this._target;
   }
 
-  getConnectivityState(tryToConnect) {}
+  getConnectivityState(tryToConnect) {
+    var grpcChannel = this.getChannelRef().getChannel();
+    return grpcChannel.getConnectivityState(tryToConnect);
+  }
 
-  watchConnectivityState(currentState, deadline, callback) {}
+  watchConnectivityState(currentState, deadline, callback) {
+    var grpcChannel = this.getChannelRef().getChannel();
+    grpcChannel.watchConnectivityState(currentState, deadline, callback);
+  }
 
   createCall(method, deadline, host, parentCall, propagateFlags) {
     var grpcChannel = this.getChannelRef().getChannel();
