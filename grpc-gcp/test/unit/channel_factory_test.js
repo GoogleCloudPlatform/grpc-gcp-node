@@ -78,16 +78,20 @@ describe('grpc-gcp channel factory tests', function() {
     });
     it('should only accept objects with string or int values', function() {
       assert.doesNotThrow(function() {
-        new grpcGcp.GcpChannelFactory('hostname', insecureCreds,{'key' : 'value'});
+        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
+          key: 'value',
+        });
       });
       assert.doesNotThrow(function() {
-        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {'key' : 5});
+        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {key: 5});
       });
       assert.throws(function() {
-        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {'key' : null});
+        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {key: null});
       });
       assert.throws(function() {
-        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {'key' : new Date()});
+        new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
+          key: new Date(),
+        });
       });
     });
     it('should succeed without the new keyword', function() {
@@ -129,8 +133,10 @@ describe('grpc-gcp channel factory tests', function() {
       channel = new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {});
     });
     it('should return IDLE for a new channel', function() {
-      assert.strictEqual(channel.getConnectivityState(),
-                         grpc.connectivityState.IDLE);
+      assert.strictEqual(
+        channel.getConnectivityState(),
+        grpc.connectivityState.IDLE
+      );
     });
   });
   describe('watchConnectivityState', function() {
@@ -156,7 +162,7 @@ describe('grpc-gcp channel factory tests', function() {
       deadline.setSeconds(deadline.getSeconds() + 1);
       channel.watchConnectivityState(old_state, deadline, function(err, value) {
         assert.ifError(err);
-        assert.notEqual(value.new_state, old_state);
+        assert.notStrictEqual(value.new_state, old_state);
         done();
       });
       channel.getConnectivityState(true);
@@ -168,12 +174,12 @@ describe('grpc-gcp channel factory tests', function() {
       deadline.setSeconds(deadline.getSeconds() + 1);
       channel.watchConnectivityState(old_state, deadline, function(err, value) {
         assert.ifError(err);
-        assert.notEqual(value.new_state, old_state);
+        assert.notStrictEqual(value.new_state, old_state);
         done();
       });
       channel.watchConnectivityState(old_state, deadline, function(err, value) {
         assert.ifError(err);
-        assert.notEqual(value.new_state, old_state);
+        assert.notStrictEqual(value.new_state, old_state);
         done();
       });
       channel.getConnectivityState(true);
