@@ -17,7 +17,7 @@
  */
 
 /**
- * @fileoverview Description of this file.
+ * @fileoverview Integration tests for spanner grpc requests.
  */
 
 'use strict';
@@ -327,7 +327,7 @@ describe('Spanner integration tests', () => {
       // Consume streaming calls.
       var emitterPromises = results.map(
         result =>
-          new Promise((resolve, reject) => {
+          new Promise(resolve => {
             result.call.on('data', partialResultSet => {
               var value = partialResultSet.getValuesList()[0].getStringValue();
               assert.strictEqual(value, 'payload');

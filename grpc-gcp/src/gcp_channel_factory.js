@@ -16,10 +16,6 @@
  *
  */
 
-/**
- * @fileoverview Description of this file.
- */
-
 'use strict';
 
 const grpc = require('grpc');
@@ -28,7 +24,15 @@ const ChannelRef = require('./channel_ref');
 
 const CLIENT_CHANNEL_ID = 'grpc_gcp.client_channel.id';
 
+/**
+ * A channel management factory that implements grpc.Channel APIs.
+ */
 class GcpChannelFactory {
+  /**
+   * @param {string} address The address of the server to connect to.
+   * @param {grpc.ChannelCredentials} credentials Channel credentials to use when connecting
+   * @param {object} options A map of channel options.
+   */
   constructor(address, credentials, options) {
     if (!options) {
       options = {};
@@ -72,6 +76,11 @@ class GcpChannelFactory {
     return map;
   }
 
+  /**
+   * Picks a grpc channel from the pool and wraps it with ChannelRef.
+   * @param {string=} affinityKey Affinity key to get the bound channel.
+   * @return {ChannelRef} Wrapper containing the grpc channel.
+   */
   getChannelRef(affinityKey) {
     if (affinityKey && this._affinityKeyToChannelRef[affinityKey]) {
       // Chose an bound channel if affinityKey is specified.
@@ -111,10 +120,19 @@ class GcpChannelFactory {
     }
   }
 
+  /**
+   * Get AffinityConfig associated with a certain method.
+   * @param {string} methodName Method name of the request.
+   */
   getAffinityConfig(methodName) {
     return this._methodToAffinity[methodName];
   }
 
+  /**
+   * Bind channel with affinity key.
+   * @param {ChannelRef} channelRef ChannelRef instance that contains the grpc channel.
+   * @param {string} affinityKey The affinity key used for binding the channel.
+   */
   bind(channelRef, affinityKey) {
     var existingChannelRef = this._affinityKeyToChannelRef[affinityKey];
     if (!existingChannelRef) {
@@ -123,6 +141,10 @@ class GcpChannelFactory {
     this._affinityKeyToChannelRef[affinityKey].affinityCountIncr();
   }
 
+  /**
+   * Unbind channel with affinity key.
+   * @param {string} boundKey Affinity key bound to a channel.
+   */
   unbind(boundKey) {
     var boundChannelRef = this._affinityKeyToChannelRef[boundKey];
     if (boundChannelRef) {
@@ -133,6 +155,9 @@ class GcpChannelFactory {
     }
   }
 
+  /**
+   * Close all channels in the channel pool.
+   */
   close() {
     this._channelRefs.forEach(ref => {
       ref.getChannel().close();
@@ -143,16 +168,46 @@ class GcpChannelFactory {
     return this._target;
   }
 
+  /**
+   * Get the current connectivity state of the picked channel.
+   * @param {*} tryToConnect If true, the channel will start connecting if it is
+   *     idle. Otherwise, idle channels will only start connecting when a
+   *     call starts.
+   */
   getConnectivityState(tryToConnect) {
     var grpcChannel = this.getChannelRef().getChannel();
     return grpcChannel.getConnectivityState(tryToConnect);
   }
 
+  /**
+   * Watch for connectivity state changes.
+   * @param {grpc.ConnectivityState} currentState The state to watch for
+   *     transitions from. This should always be populated by calling
+   *     getConnectivityState immediately before.
+   * @param {grpc~Deadline} deadline A deadline for waiting for a state change
+   * @param {grpc.Channel~watchConnectivityStateCallback} callback Called with no
+   *     error when the state changes, or with an error if the deadline passes
+   *     without a state change
+   */
   watchConnectivityState(currentState, deadline, callback) {
     var grpcChannel = this.getChannelRef().getChannel();
     grpcChannel.watchConnectivityState(currentState, deadline, callback);
   }
 
+  /**
+   * Create a call object. This function will not be called when using
+   *     grpc.Client class. But since it's a public function of grpc.Channel,
+   *     It needs to be implemented for potential use cases.
+   * @param {string} method The full method string to request.
+   * @param {grpc~Deadline} deadline The call deadline.
+   * @param {string|null} host A host string override for making the request.
+   * @param {grpc~Call|null} parentCall A server call to propagate some
+   *     information from.
+   * @param {number|null} propagateFlags A bitwise combination of elements of
+   *     {@link grpc.propagate} that indicates what information to propagate
+   *     from parentCall.
+   * @return {grpc~Call}
+   */
   createCall(method, deadline, host, parentCall, propagateFlags) {
     var grpcChannel = this.getChannelRef().getChannel();
     return grpcChannel.createCall(

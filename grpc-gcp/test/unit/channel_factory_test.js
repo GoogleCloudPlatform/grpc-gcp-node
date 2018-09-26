@@ -151,7 +151,7 @@ describe('grpc-gcp channel factory tests', function() {
       var old_state = channel.getConnectivityState();
       var deadline = new Date();
       deadline.setSeconds(deadline.getSeconds() + 1);
-      channel.watchConnectivityState(old_state, deadline, function(err, value) {
+      channel.watchConnectivityState(old_state, deadline, function(err) {
         assert(err);
         done();
       });

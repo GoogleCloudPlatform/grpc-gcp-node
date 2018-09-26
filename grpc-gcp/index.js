@@ -55,25 +55,30 @@ exports.gcpChannelFactoryOverride = function(
 
 /**
  * Pass in call properties and return a new object with modified values.
+ * This function will be used together with gcpChannelFactoryOverride
+ * when constructing a grpc Client.
  * @memberof grpc-gcp
- * @param {Object=} callProperties Options to apply to the loaded file
- * @param {Object=} [callProperties.argument] The argument to the method.
+ * @param {object} callProperties Call properties.
+ * @param {object=} [callProperties.argument] The argument to the method.
  *     Only available for unary and server-streaming methods.
- * @param {Object=} [callProperties.metadata] The metadata that will be
+ * @param {object=} [callProperties.metadata] The metadata that will be
  *     sent with the method.
- * @param {Object=} [callProperties.call] The call object that will be
+ * @param {object=} [callProperties.call] The call object that will be
  *     returned by the method.
- * @param {Object=} [callProperties.channel] The channel object that will
+ * @param {object=} [callProperties.channel] The channel object that will
  *     be used to transmit the request.
- * @param {Object=} [callProperties.methodDefinition] An object describing
+ * @param {object=} [callProperties.methodDefinition] An object describing
  *     the request method.
- * @param {Object=} [callProperties.callOptions] The options object passed
+ * @param {object=} [callProperties.callOptions] The options object passed
  *     to the call
- * @param {Function=} [callProperties.callback] Callback function to be
+ * @param {function=} [callProperties.callback] Callback function to be
  *     appended in intercepting call.
- * @return {Object} Modified call properties.
+ * @return {object} Modified call properties.
  */
 exports.gcpCallInvocationTransformer = function(callProperties) {
+  if (!callProperties) {
+    callProperties = {};
+  }
   var channelFactory = callProperties.channel;
   if (!channelFactory || !(channelFactory instanceof GcpChannelFactory)) {
     // The gcpCallInvocationTransformer needs to use gcp channel factory.
@@ -90,10 +95,6 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
 
   var preProcessResult = preProcess(channelFactory, path, argument);
   var channelRef = preProcessResult.channelRef;
-
-  // callProperties.call.on('status', status => {
-  //   channelRef.activeStreamsCountDecr();
-  // });
 
   var boundKey = preProcessResult.boundKey;
   var postProcessArgs = {
@@ -173,6 +174,13 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
   };
 };
 
+/**
+ * Handle channel affinity and pick a channel before call starts.
+ * @param {GcpChannelFactory} channelFactory The channel management factory.
+ * @param {string} path Method path.
+ * @param {object=} argument The request arguments object.
+ * @return {object} Result containing bound affinity key and the chosen channel ref object.
+ */
 var preProcess = function(channelFactory, path, argument) {
   var affinityConfig = channelFactory.getAffinityConfig(path);
   var affinityKey;
@@ -196,6 +204,14 @@ var preProcess = function(channelFactory, path, argument) {
   };
 };
 
+/**
+ * Handle channel affinity and streams count after call is done.
+ * @param {GcpChannelFactory} channelFactory The channel management factory.
+ * @param {ChannelRef} channelRef ChannelRef instance that contains a real grpc channel.
+ * @param {string} path Method path.
+ * @param {string=} boundKey Affinity key bound to a channel.
+ * @param {object=} responseMsg Response proto message.
+ */
 var postProcess = function(
   channelFactory,
   channelRef,
@@ -220,6 +236,11 @@ var postProcess = function(
   channelRef.activeStreamsCountDecr();
 };
 
+/**
+ * Retrieve affinity key specified in the proto message.
+ * @param {string} affinityKeyName affinity key locator.
+ * @param {object} message proto message that contains affinity info.
+ */
 var getAffinityKeyFromMessage = function(affinityKeyName, message) {
   if (!affinityKeyName) {
     throw new Error('Cannot find affinity_key in proto message.');

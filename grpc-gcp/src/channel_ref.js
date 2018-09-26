@@ -16,13 +16,19 @@
  *
  */
 
-/**
- * @fileoverview Description of this file.
- */
-
 'use strict';
 
+/**
+ * A wrapper of real grpc channel. Also provides helper functions to
+ * calculate affinity counts and active streams count.
+ */
 class ChannelRef {
+  /**
+   * @param {grpc.Channel} channel The underlying grpc channel.
+   * @param {number} channelId Id for creating unique channel.
+   * @param {number=} affinityCount Initial affinity count.
+   * @param {number=} activeStreamsCount Initial streams count.
+   */
   constructor(channel, channelId, affinityCount, activeStreamsCount) {
     this._channel = channel;
     this._channelId = channelId;
