@@ -61,6 +61,7 @@ class GcpChannelFactory {
     this._target = address;
     this._credentials = credentials;
     this._isClosed = false;
+    // Initialize channel in the pool to avoid empty pool.
     this.getChannelRef();
   }
 
@@ -134,6 +135,7 @@ class GcpChannelFactory {
    * @param {string} affinityKey The affinity key used for binding the channel.
    */
   bind(channelRef, affinityKey) {
+    if (!affinityKey || !channelRef) return;
     var existingChannelRef = this._affinityKeyToChannelRef[affinityKey];
     if (!existingChannelRef) {
       this._affinityKeyToChannelRef[affinityKey] = channelRef;
@@ -146,6 +148,7 @@ class GcpChannelFactory {
    * @param {string} boundKey Affinity key bound to a channel.
    */
   unbind(boundKey) {
+    if (!boundKey) return;
     var boundChannelRef = this._affinityKeyToChannelRef[boundKey];
     if (boundChannelRef) {
       boundChannelRef.affinityCountDecr();
@@ -169,14 +172,55 @@ class GcpChannelFactory {
   }
 
   /**
-   * Get the current connectivity state of the picked channel.
+   * Get the current connectivity state of the channel pool.
    * @param {*} tryToConnect If true, the channel will start connecting if it is
    *     idle. Otherwise, idle channels will only start connecting when a
    *     call starts.
    */
   getConnectivityState(tryToConnect) {
-    var grpcChannel = this.getChannelRef().getChannel();
-    return grpcChannel.getConnectivityState(tryToConnect);
+    var ready = 0;
+    var idle = 0;
+    var connecting = 0;
+    var transientFailure = 0;
+    var shutdown = 0;
+
+    for (let i = 0; i < this._channelRefs.length; i++) {
+      var grpcChannel = this._channelRefs[i].getChannel();
+      var state = grpcChannel.getConnectivityState(tryToConnect);
+      switch (state) {
+        case grpc.connectivityState.READY:
+          ready++;
+          break;
+        case grpc.connectivityState.SHUTDOWN:
+          shutdown++;
+          break;
+        case grpc.connectivityState.TRANSIENT_FAILURE:
+          transientFailure++;
+          break;
+        case grpc.connectivityState.CONNECTING:
+          connecting++;
+          break;
+        case grpc.connectivityState.IDLE:
+          idle++;
+          break;
+      }
+    }
+
+    if (ready > 0) {
+      return grpc.connectivityState.READY;
+    } else if (idle > 0) {
+      return grpc.connectivityState.IDLE;
+    } else if (connecting > 0) {
+      return grpc.connectivityState.CONNECTING;
+    } else if (transientFailure > 0) {
+      return grpc.connectivityState.TRANSIENT_FAILURE;
+    } else if (shutdown > 0) {
+      return grpc.connectivityState.SHUTDOWN;
+    }
+
+    throw new Error(
+      'Cannot get connectivity state because no channel provides valid state.'
+    );
   }
 
   /**
@@ -190,8 +234,18 @@ class GcpChannelFactory {
    *     without a state change
    */
   watchConnectivityState(currentState, deadline, callback) {
-    var grpcChannel = this.getChannelRef().getChannel();
-    grpcChannel.watchConnectivityState(currentState, deadline, callback);
+    setTimeout(() => {
+      var state = this.getConnectivityState(false);
+      if (state !== currentState) {
+        callback(null, state);
+      } else {
+        callback(
+          new Error(
+            'watchConnectivityState failed because deadline passed without state change.'
+          )
+        );
+      }
+    }, deadline.getTime() - new Date().getTime());
   }
 
   /**

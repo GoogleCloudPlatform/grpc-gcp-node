@@ -97,27 +97,9 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
   var channelRef = preProcessResult.channelRef;
 
   var boundKey = preProcessResult.boundKey;
-  var postProcessArgs = {
-    channelFactory: channelFactory,
-    channelRef: channelRef,
-    boundKey: boundKey,
-    path: path,
-  };
 
-  var interceptor = function(options, nextCall) {
-    var channelFactory;
-    var channelRef;
-    var boundKey;
-    var path;
-    if (options.postProcessArgs) {
-      channelFactory = options.postProcessArgs.channelFactory;
-      channelRef = options.postProcessArgs.channelRef;
-      boundKey = options.postProcessArgs.boundKey;
-      path = options.postProcessArgs.path;
-    }
-    options = _.omit(options, 'postProcessArgs');
-
-    var savedMessage;
+  var postProcessInterceptor = function(options, nextCall) {
+    var firstMessage;
 
     var requester = {
       start: function(metadata, listener, next) {
@@ -126,7 +108,7 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
             next(metadata);
           },
           onReceiveMessage: function(message, next) {
-            savedMessage = message;
+            if (!firstMessage) firstMessage = message;
             next(message);
           },
           onReceiveStatus: function(status, next) {
@@ -136,7 +118,7 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
                 channelRef,
                 path,
                 boundKey,
-                savedMessage
+                firstMessage
               );
             }
             next(status);
@@ -158,10 +140,10 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
   };
 
   // Append interceptor to existing interceptors list.
-  var newCallOptions = _.merge(callOptions, {postProcessArgs: postProcessArgs});
-  var interceptors = callOptions.interceptors;
-  if (!interceptors) interceptors = [];
-  newCallOptions.interceptors = interceptors.concat([interceptor]);
+  var newCallOptions = {};
+  _.assign(newCallOptions, callOptions);
+  var interceptors = callOptions.interceptors ? callOptions.interceptors : [];
+  newCallOptions.interceptors = interceptors.concat([postProcessInterceptor]);
 
   return {
     argument: argument,
@@ -240,24 +222,26 @@ var postProcess = function(
  * Retrieve affinity key specified in the proto message.
  * @param {string} affinityKeyName affinity key locator.
  * @param {object} message proto message that contains affinity info.
+ * @return {string} Affinity key string.
  */
 var getAffinityKeyFromMessage = function(affinityKeyName, message) {
-  if (!affinityKeyName) {
-    throw new Error('Cannot find affinity_key in proto message.');
-  }
-  var currMessage = message;
-  var names = affinityKeyName.split('.');
-  if (names) {
-    names.forEach(name => {
-      let getter = 'get' + name.charAt(0).toUpperCase() + name.substr(1);
+  if (affinityKeyName) {
+    var currMessage = message;
+    var names = affinityKeyName.split('.');
+    var i = 0;
+    for (; i < names.length; i++) {
+      let getter =
+        'get' + names[i].charAt(0).toUpperCase() + names[i].substr(1);
+      if (!currMessage || typeof currMessage[getter] !== 'function') break;
       currMessage = currMessage[getter]();
-    });
-    if (currMessage) return currMessage;
+    }
+    if (i !== 0 && i === names.length) return currMessage;
   }
-  throw new Error(
+  console.error(
     util.format(
       'Cannot find affinity value from proto message using affinity_key: %s.',
       affinityKeyName
     )
   );
+  return '';
 };

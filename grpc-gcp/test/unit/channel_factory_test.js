@@ -143,6 +143,7 @@ describe('grpc-gcp channel factory tests', function() {
     var channel;
     beforeEach(function() {
       channel = new grpcGcp.GcpChannelFactory('localhost', insecureCreds, {});
+      // channel = new grpc.Channel('localhost', insecureCreds, {});
     });
     afterEach(function() {
       channel.close();
@@ -160,9 +161,8 @@ describe('grpc-gcp channel factory tests', function() {
       var old_state = channel.getConnectivityState();
       var deadline = new Date();
       deadline.setSeconds(deadline.getSeconds() + 1);
-      channel.watchConnectivityState(old_state, deadline, function(err, value) {
+      channel.watchConnectivityState(old_state, deadline, function(err) {
         assert.ifError(err);
-        assert.notStrictEqual(value.new_state, old_state);
         done();
       });
       channel.getConnectivityState(true);
@@ -172,14 +172,12 @@ describe('grpc-gcp channel factory tests', function() {
       var old_state = channel.getConnectivityState();
       var deadline = new Date();
       deadline.setSeconds(deadline.getSeconds() + 1);
-      channel.watchConnectivityState(old_state, deadline, function(err, value) {
+      channel.watchConnectivityState(old_state, deadline, function(err) {
         assert.ifError(err);
-        assert.notStrictEqual(value.new_state, old_state);
         done();
       });
-      channel.watchConnectivityState(old_state, deadline, function(err, value) {
+      channel.watchConnectivityState(old_state, deadline, function(err) {
         assert.ifError(err);
-        assert.notStrictEqual(value.new_state, old_state);
         done();
       });
       channel.getConnectivityState(true);

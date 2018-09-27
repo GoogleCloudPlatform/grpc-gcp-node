@@ -352,4 +352,30 @@ describe('Spanner integration tests', () => {
       });
     });
   });
+
+  it('Test invalid BOUND affinity', done => {
+    var getSessionRequest = new spanner.GetSessionRequest();
+    getSessionRequest.setName('wrong_name');
+    client.getSession(getSessionRequest, err => {
+      assert(err);
+      assert.strictEqual(
+        err.message,
+        '3 INVALID_ARGUMENT: Invalid GetSession request.'
+      );
+      done();
+    });
+  });
+
+  it('Test invalid UNBIND affinity', done => {
+    var deleteSessionRequest = new spanner.DeleteSessionRequest();
+    deleteSessionRequest.setName('wrong_name');
+    client.deleteSession(deleteSessionRequest, err => {
+      assert(err);
+      assert.strictEqual(
+        err.message,
+        '3 INVALID_ARGUMENT: Invalid DeleteSession request.'
+      );
+      done();
+    });
+  });
 });
