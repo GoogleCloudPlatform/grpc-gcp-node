@@ -288,7 +288,7 @@ describe('Spanner integration tests', () => {
     });
   });
 
-  it('Test concurrent streams wartermark', done => {
+  it('Test concurrent streams watermark', done => {
     var watermark = 5;
     pool._maxConcurrentStreamsLowWatermark = watermark;
 

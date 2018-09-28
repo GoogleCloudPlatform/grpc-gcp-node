@@ -4,10 +4,11 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "index.js",
   "scripts": {
-    "integration-tests": "./node_modules/.bin/mocha test/integration/*.js --reporter spec --timeout 600000",
-    "unit-tests": "./node_modules/.bin/mocha test/unit/*.js --reporter spec",
+    "integration-tests": "./node_modules/.bin/_mocha test/integration/*.js --reporter spec --timeout 600000",
+    "unit-tests": "./node_modules/.bin/_mocha test/unit/*.js --reporter spec",
     "lint": "./node_modules/.bin/eslint src/ test/integration",
-    "prettier": "prettier --write src/*.js src/*/*.js test/*.js test/*/*.js"
+    "prettier": "prettier --write src/*.js src/*/*.js test/*.js test/*/*.js",
+    "coverage": "nyc ./node_modules/.bin/_mocha test/unit test/integration --reporter spec --timeout 600000"
   },
   "repository": {
     "type": "git",
@@ -41,6 +42,7 @@
     "google-protobuf": "^3.6.1",
     "grpc-tools": "^1.6.6",
     "mocha": "^5.2.0",
+    "nyc": "^13.0.1",
     "prettier": "^1.14.2"
   }
 }
