@@ -46,11 +46,12 @@ class GcpChannelFactory {
     this._maxConcurrentStreamsLowWatermark = 100;
     var gcpApiConfig = options.gcpApiConfig;
     if (gcpApiConfig) {
-      if (gcpApiConfig.hasChannelPool()) {
-        var channelPool = gcpApiConfig.getChannelPool();
-        if (channelPool.getMaxSize()) this._maxSize = channelPool.getMaxSize();
-        if (channelPool.getMaxConcurrentStreamsLowWatermark()) {
-          this._maxConcurrentStreamsLowWatermark = channelPool.getMaxConcurrentStreamsLowWatermark();
+      if (gcpApiConfig.channelPool) {
+        var channelPool = gcpApiConfig.channelPool;
+        if (channelPool.maxSize) this._maxSize = channelPool.maxSize;
+        if (channelPool.maxConcurrentStreamsLowWatermark) {
+          this._maxConcurrentStreamsLowWatermark =
+            channelPool.maxConcurrentStreamsLowWatermark;
         }
       }
       this._methodToAffinity = this._initMethodToAffinityMap(gcpApiConfig);
@@ -67,11 +68,11 @@ class GcpChannelFactory {
 
   _initMethodToAffinityMap(gcpApiConfig) {
     var map = {};
-    var methodList = gcpApiConfig.getMethodList();
+    var methodList = gcpApiConfig.method;
     methodList.forEach(method => {
-      var nameList = method.getNameList();
+      var nameList = method.name;
       nameList.forEach(methodName => {
-        if (method.hasAffinity()) map[methodName] = method.getAffinity();
+        if (method.affinity) map[methodName] = method.affinity;
       });
     });
     return map;

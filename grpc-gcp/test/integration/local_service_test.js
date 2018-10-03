@@ -34,23 +34,13 @@ var server_insecure_creds = grpc.ServerCredentials.createInsecure();
 var packageDef = protoLoader.loadSync(PROTO_PATH);
 var Client = grpc.loadPackageDefinition(packageDef).TestService;
 
-var initApiConfig = function(apiConfig) {
-  // function addMethod(apiConfig, methodName, command, affinityKey) {
-  //   var affinityConfig = new grpcGcp.AffinityConfig();
-  //   affinityConfig.setCommand(command);
-  //   affinityConfig.setAffinityKey(affinityKey);
-  //   var methodConfig = new grpcGcp.MethodConfig();
-  //   methodConfig.addName(methodName);
-  //   methodConfig.setAffinity(affinityConfig);
-  //   apiConfig.addMethod(methodConfig);
-  // }
-
-  apiConfig.setChannelPool(
-    new grpcGcp.ChannelPoolConfig({
+var initApiConfig = function() {
+  return grpcGcp.createGcpApiConfig({
+    channelPool: {
       maxSize: 10,
       maxConcurrentStreamsLowWatermark: 1,
-    })
-  );
+    },
+  });
 };
 
 describe('Local service integration tests', function() {
@@ -109,8 +99,6 @@ describe('Local service integration tests', function() {
       done();
     });
     it('no override function', function(done) {
-      var apiConfig = new grpcGcp.ApiConfig();
-      initApiConfig(apiConfig);
       var channelOptions = {
         callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
       };
@@ -129,9 +117,7 @@ describe('Local service integration tests', function() {
     var metadata;
     var client;
     before(() => {
-      var apiConfig = new grpcGcp.ApiConfig();
-      initApiConfig(apiConfig);
-
+      var apiConfig = initApiConfig();
       var channelOptions = {
         channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
         callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
@@ -315,6 +301,4 @@ describe('Local service integration tests', function() {
       });
     });
   });
-
-  
 });

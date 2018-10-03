@@ -27,108 +27,18 @@ const grpc = require('grpc');
 const {GoogleAuth} = require('google-auth-library');
 const spannerGrpc = require('../google/spanner/v1/spanner_grpc_pb.js');
 const spanner = require('../google/spanner/v1/spanner_pb.js');
+const fs = require('fs');
 
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
 const _TEST_SQL = 'select id from storage';
+const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
 const _MAX_SIZE = 10;
 const _LOW_WATERMARK = 1;
 
 const grpcGcp = require('../..');
-
-var initApiConfig = function(apiConfig) {
-  function addMethod(apiConfig, methodName, command, affinityKey) {
-    var affinityConfig = new grpcGcp.AffinityConfig();
-    affinityConfig.setCommand(command);
-    affinityConfig.setAffinityKey(affinityKey);
-    var methodConfig = new grpcGcp.MethodConfig();
-    methodConfig.addName(methodName);
-    methodConfig.setAffinity(affinityConfig);
-    apiConfig.addMethod(methodConfig);
-  }
-
-  apiConfig.setChannelPool(
-    new grpcGcp.ChannelPoolConfig({
-      maxSize: _MAX_SIZE,
-      maxConcurrentStreamsLowWatermark: _LOW_WATERMARK,
-    })
-  );
-
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/CreateSession',
-    grpcGcp.AffinityConfig.Command.BIND,
-    'name'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/GetSession',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'name'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/DeleteSession',
-    grpcGcp.AffinityConfig.Command.UNBIND,
-    'name'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/ExecuteSql',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/ExecuteStreamingSql',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/Read',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/StreamingRead',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/BeginTransaction',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/Commit',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/Rollback',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/PartitionQuery',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-  addMethod(
-    apiConfig,
-    '/google.spanner.v1.Spanner/PartitionRead',
-    grpcGcp.AffinityConfig.Command.BOUND,
-    'session'
-  );
-};
 
 describe('Spanner integration tests', () => {
   let client;
@@ -149,8 +59,8 @@ describe('Spanner integration tests', () => {
         callCreds
       );
 
-      var apiConfig = new grpcGcp.ApiConfig();
-      initApiConfig(apiConfig);
+      var apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
+      var apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
 
       var channelOptions = {
         channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
