@@ -35,9 +35,6 @@ const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
 const _TEST_SQL = 'select id from storage';
 const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
-const _MAX_SIZE = 10;
-const _LOW_WATERMARK = 1;
-
 const grpcGcp = require('../..');
 
 describe('Spanner integration tests', () => {
