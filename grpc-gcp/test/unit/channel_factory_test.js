@@ -143,44 +143,14 @@ describe('grpc-gcp channel factory tests', function() {
     var channel;
     beforeEach(function() {
       channel = new grpcGcp.GcpChannelFactory('localhost', insecureCreds, {});
-      // channel = new grpc.Channel('localhost', insecureCreds, {});
     });
     afterEach(function() {
       channel.close();
     });
-    it('should time out if called alone', function(done) {
-      var old_state = channel.getConnectivityState();
-      var deadline = new Date();
-      deadline.setSeconds(deadline.getSeconds() + 1);
-      channel.watchConnectivityState(old_state, deadline, function(err) {
-        assert(err);
-        done();
+    it('should throw unimplemented error', function() {
+      assert.throws(() => {
+        channel.watchConnectivityState();
       });
-    });
-    it('should complete if a connection attempt is forced', function(done) {
-      var old_state = channel.getConnectivityState();
-      var deadline = new Date();
-      deadline.setSeconds(deadline.getSeconds() + 1);
-      channel.watchConnectivityState(old_state, deadline, function(err) {
-        assert.ifError(err);
-        done();
-      });
-      channel.getConnectivityState(true);
-    });
-    it('should complete twice if called twice', function(done) {
-      done = multiDone(done, 2);
-      var old_state = channel.getConnectivityState();
-      var deadline = new Date();
-      deadline.setSeconds(deadline.getSeconds() + 1);
-      channel.watchConnectivityState(old_state, deadline, function(err) {
-        assert.ifError(err);
-        done();
-      });
-      channel.watchConnectivityState(old_state, deadline, function(err) {
-        assert.ifError(err);
-        done();
-      });
-      channel.getConnectivityState(true);
     });
   });
 });
