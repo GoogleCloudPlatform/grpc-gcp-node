@@ -209,12 +209,12 @@ class GcpChannelFactory {
 
     if (ready > 0) {
       return grpc.connectivityState.READY;
-    } else if (idle > 0) {
-      return grpc.connectivityState.IDLE;
     } else if (connecting > 0) {
       return grpc.connectivityState.CONNECTING;
     } else if (transientFailure > 0) {
       return grpc.connectivityState.TRANSIENT_FAILURE;
+    } else if (idle > 0) {
+      return grpc.connectivityState.IDLE;
     } else if (shutdown > 0) {
       return grpc.connectivityState.SHUTDOWN;
     }
@@ -225,7 +225,9 @@ class GcpChannelFactory {
   }
 
   /**
-   * Watch for connectivity state changes.
+   * Watch for connectivity state changes. Currently This function will throw
+   * not implemented error because the implementation requires lot of work but
+   * has little use cases.
    * @param {grpc.ConnectivityState} currentState The state to watch for
    *     transitions from. This should always be populated by calling
    *     getConnectivityState immediately before.
@@ -235,18 +237,7 @@ class GcpChannelFactory {
    *     without a state change
    */
   watchConnectivityState(currentState, deadline, callback) {
-    setTimeout(() => {
-      var state = this.getConnectivityState(false);
-      if (state !== currentState) {
-        callback(null, state);
-      } else {
-        callback(
-          new Error(
-            'watchConnectivityState failed because deadline passed without state change.'
-          )
-        );
-      }
-    }, deadline.getTime() - new Date().getTime());
+    throw new Error('Function watchConnectivityState not implemented!');
   }
 
   /**
