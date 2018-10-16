@@ -18,24 +18,28 @@
 
 'use strict';
 
-const {
-  ApiConfig,
-  ChannelPoolConfig,
-  AffinityConfig,
-  MethodConfig,
-} = require('./src/generated/grpc_gcp_pb');
 const GcpChannelFactory = require('./src/gcp_channel_factory');
-const grpc = require('grpc');
 
+const grpc = require('grpc');
 const util = require('util');
 const _ = require('lodash');
+const protobuf = require('protobufjs');
 
-exports.GcpChannelFactory = GcpChannelFactory;
+const PROTO_PATH = __dirname + '/protos/grpc_gcp.proto';
 
-exports.ApiConfig = ApiConfig;
-exports.ChannelPoolConfig = ChannelPoolConfig;
-exports.AffinityConfig = AffinityConfig;
-exports.MethodConfig = MethodConfig;
+var protoRoot = protobuf.loadSync(PROTO_PATH);
+const ApiConfig = protoRoot.lookupType('grpc.gcp.ApiConfig');
+const AffinityConfig = protoRoot.lookupType('grpc.gcp.AffinityConfig');
+
+/**
+ * Create ApiConfig proto message from config object.
+ * @param {object} apiDefinition Api object that specifies channel pool configuation.
+ * @return {protobuf.Message} A protobuf message type.
+ */
+exports.createGcpApiConfig = function(apiDefinition) {
+  var apiConfigMsg = ApiConfig.fromObject(apiDefinition);
+  return apiConfigMsg;
+};
 
 /**
  * Function for creating a gcp channel factory.
@@ -166,14 +170,14 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
 var preProcess = function(channelFactory, path, argument) {
   var affinityConfig = channelFactory.getAffinityConfig(path);
   var affinityKey;
-  if (argument && affinityConfig && affinityConfig.getCommand()) {
-    let command = affinityConfig.getCommand();
+  if (argument && affinityConfig && affinityConfig.command) {
+    let command = affinityConfig.command;
     if (
       command === AffinityConfig.Command.BOUND ||
       command === AffinityConfig.Command.UNBIND
     ) {
       affinityKey = getAffinityKeyFromMessage(
-        affinityConfig.getAffinityKey(),
+        affinityConfig.affinityKey,
         argument
       );
     }
@@ -203,11 +207,11 @@ var postProcess = function(
 ) {
   if (!channelFactory || !responseMsg) return;
   var affinityConfig = channelFactory.getAffinityConfig(path);
-  if (affinityConfig && affinityConfig.getCommand()) {
-    var command = affinityConfig.getCommand();
+  if (affinityConfig && affinityConfig.command) {
+    var command = affinityConfig.command;
     if (command === AffinityConfig.Command.BIND) {
       var affinityKey = getAffinityKeyFromMessage(
-        affinityConfig.getAffinityKey(),
+        affinityConfig.affinityKey,
         responseMsg
       );
       channelFactory.bind(channelRef, affinityKey);
@@ -245,3 +249,5 @@ var getAffinityKeyFromMessage = function(affinityKeyName, message) {
   );
   return '';
 };
+
+exports.GcpChannelFactory = GcpChannelFactory;

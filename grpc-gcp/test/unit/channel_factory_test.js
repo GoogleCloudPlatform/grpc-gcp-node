@@ -153,4 +153,30 @@ describe('grpc-gcp channel factory tests', function() {
       });
     });
   });
+  describe('createCall', function() {
+    var channel;
+    beforeEach(function() {
+      channel = new grpcGcp.GcpChannelFactory('localhost', insecureCreds, {});
+    });
+    afterEach(function() {
+      channel.close();
+    });
+    it('should return grpc.Call', function() {
+      assert.throws(function() {
+        channel.createCall();
+      }, TypeError);
+      assert.throws(function() {
+        channel.createCall('method');
+      }, TypeError);
+      assert.doesNotThrow(function() {
+        channel.createCall('method', new Date());
+      });
+      assert.doesNotThrow(function() {
+        channel.createCall('method', 0);
+      });
+      assert.doesNotThrow(function() {
+        channel.createCall('method', new Date(), 'host_override');
+      });
+    });
+  });
 });

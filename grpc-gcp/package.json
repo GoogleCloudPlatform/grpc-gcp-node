@@ -31,9 +31,11 @@
   },
   "dependencies": {
     "grpc": "^1.14.1",
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.11",
+    "protobufjs": "~6.8.8"
   },
   "devDependencies": {
+    "@grpc/proto-loader": "^0.3.0",
     "eslint": "^5.5.0",
     "eslint-config-prettier": "^3.0.1",
     "eslint-plugin-node": "^7.0.1",
@@ -44,5 +46,11 @@
     "mocha": "^5.2.0",
     "nyc": "^13.0.1",
     "prettier": "^1.14.2"
+  },
+  "nyc": {
+    "exclude": [
+      "src/generated",
+      "test"
+    ]
   }
 }
