@@ -18,25 +18,26 @@
 
 'use strict';
 
-const GcpChannelFactory = require('./src/gcp_channel_factory');
+import * as grpc from 'grpc';
+import * as _ from 'lodash';
+import * as protobuf from 'protobufjs';
+import * as util from 'util';
 
-const grpc = require('grpc');
-const util = require('util');
-const _ = require('lodash');
-const protobuf = require('protobufjs');
+import {GcpChannelFactory} from './gcp_channel_factory';
+import { ChannelRef } from './channel_ref';
 
 const PROTO_PATH = __dirname + '/protos/grpc_gcp.proto';
 
 var protoRoot = protobuf.loadSync(PROTO_PATH);
-const ApiConfig = protoRoot.lookupType('grpc.gcp.ApiConfig');
-const AffinityConfig = protoRoot.lookupType('grpc.gcp.AffinityConfig');
+const ApiConfig: any = protoRoot.lookupType('grpc.gcp.ApiConfig');
+const AffinityConfig: any = protoRoot.lookupType('grpc.gcp.AffinityConfig');
 
 /**
  * Create ApiConfig proto message from config object.
- * @param {object} apiDefinition Api object that specifies channel pool configuation.
- * @return {protobuf.Message} A protobuf message type.
+ * @param apiDefinition Api object that specifies channel pool configuation.
+ * @return A protobuf message type.
  */
-exports.createGcpApiConfig = function(apiDefinition) {
+export function createGcpApiConfig(apiDefinition: {}) : protobuf.Message {
   var apiConfigMsg = ApiConfig.fromObject(apiDefinition);
   return apiConfigMsg;
 };
@@ -44,45 +45,56 @@ exports.createGcpApiConfig = function(apiDefinition) {
 /**
  * Function for creating a gcp channel factory.
  * @memberof grpc-gcp
- * @param {string} address The address of the server to connect to.
- * @param {grpc.ChannelCredentials} credentials Channel credentials to use when connecting
- * @param {grpc~ChannelOptions} options A map of channel options that will be passed to the core.
+ * @param address The address of the server to connect to.
+ * @param credentials Channel credentials to use when connecting
+ * @param options A map of channel options that will be passed to the core.
  * @return {GcpChannelFactory} A GcpChannelFactory instance.
  */
-exports.gcpChannelFactoryOverride = function(
-  address,
-  credentials,
-  channelOptions
+export function gcpChannelFactoryOverride(
+  address: string,
+  credentials: grpc.ChannelCredentials,
+  options: {}
 ) {
-  return new GcpChannelFactory(address, credentials, channelOptions);
+  return new GcpChannelFactory(address, credentials, options);
 };
+
+export interface MethodDefinition {
+  path: string;
+  requestStream: boolean;
+  responseStream: boolean;
+  requestSerialize: grpc.serialize<any>;
+  responseDeserialize: grpc.deserialize<any>;
+}
+
+export interface InputCallProperties {
+  argument?: any;
+  metadata: grpc.Metadata;
+  call: grpc.ClientUnaryCall | grpc.ClientReadableStream<any> | grpc.ClientDuplexStream<any, any> | grpc.ClientWritableStream<any>;
+  channel: GcpChannelFactory;
+  methodDefinition: MethodDefinition;
+  callOptions: grpc.CallOptions;
+  callback?: Function;
+}
+
+export interface OutputCallProperties {
+  argument?: any;
+  metadata: grpc.Metadata;
+  call: grpc.ClientUnaryCall | grpc.ClientReadableStream<any> | grpc.ClientDuplexStream<any, any> | grpc.ClientWritableStream<any>;
+  channel: grpc.Channel;
+  methodDefinition: MethodDefinition;
+  callOptions: grpc.CallOptions;
+  callback?: Function;
+}
 
 /**
  * Pass in call properties and return a new object with modified values.
  * This function will be used together with gcpChannelFactoryOverride
  * when constructing a grpc Client.
  * @memberof grpc-gcp
- * @param {object} callProperties Call properties.
- * @param {object=} [callProperties.argument] The argument to the method.
- *     Only available for unary and server-streaming methods.
- * @param {object=} [callProperties.metadata] The metadata that will be
- *     sent with the method.
- * @param {object=} [callProperties.call] The call object that will be
- *     returned by the method.
- * @param {object=} [callProperties.channel] The channel object that will
- *     be used to transmit the request.
- * @param {object=} [callProperties.methodDefinition] An object describing
- *     the request method.
- * @param {object=} [callProperties.callOptions] The options object passed
- *     to the call
- * @param {function=} [callProperties.callback] Callback function to be
- *     appended in intercepting call.
- * @return {object} Modified call properties.
+ * @param callProperties Call properties with channel factory object.
+ * @return Modified call properties with selected grpc channel object.
  */
-exports.gcpCallInvocationTransformer = function(callProperties) {
-  if (!callProperties) {
-    callProperties = {};
-  }
+export function gcpCallInvocationTransformer(callProperties: InputCallProperties): OutputCallProperties {
   var channelFactory = callProperties.channel;
   if (!channelFactory || !(channelFactory instanceof GcpChannelFactory)) {
     // The gcpCallInvocationTransformer needs to use gcp channel factory.
@@ -102,20 +114,20 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
 
   var boundKey = preProcessResult.boundKey;
 
-  var postProcessInterceptor = function(options, nextCall) {
-    var firstMessage;
+  var postProcessInterceptor = function(options: any, nextCall: Function): grpc.InterceptingCall {
+    var firstMessage: any;
 
     var requester = {
-      start: function(metadata, listener, next) {
+      start: function(metadata: grpc.Metadata, listener: grpc.Listener, next: Function): void {
         var newListener = {
-          onReceiveMetadata: function(metadata, next) {
+          onReceiveMetadata: function(metadata: grpc.Metadata, next: Function) {
             next(metadata);
           },
-          onReceiveMessage: function(message, next) {
+          onReceiveMessage: function(message: any, next: Function) {
             if (!firstMessage) firstMessage = message;
             next(message);
           },
-          onReceiveStatus: function(status, next) {
+          onReceiveStatus: function(status: grpc.StatusObject, next: Function) {
             if (status.code === grpc.status.OK) {
               postProcess(
                 channelFactory,
@@ -130,13 +142,13 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
         };
         next(metadata, newListener);
       },
-      sendMessage: function(message, next) {
+      sendMessage: function(message: any, next: Function): void {
         next(message);
       },
-      halfClose: function(next) {
+      halfClose: function(next: Function): void {
         next();
       },
-      cancel: function(message, next) {
+      cancel: function(next: Function): void {
         next();
       },
     };
@@ -144,8 +156,7 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
   };
 
   // Append interceptor to existing interceptors list.
-  var newCallOptions = {};
-  _.assign(newCallOptions, callOptions);
+  var newCallOptions = _.assign({}, callOptions);
   var interceptors = callOptions.interceptors ? callOptions.interceptors : [];
   newCallOptions.interceptors = interceptors.concat([postProcessInterceptor]);
 
@@ -162,12 +173,12 @@ exports.gcpCallInvocationTransformer = function(callProperties) {
 
 /**
  * Handle channel affinity and pick a channel before call starts.
- * @param {GcpChannelFactory} channelFactory The channel management factory.
- * @param {string} path Method path.
- * @param {object=} argument The request arguments object.
- * @return {object} Result containing bound affinity key and the chosen channel ref object.
+ * @param channelFactory The channel management factory.
+ * @param path Method path.
+ * @param argument The request arguments object.
+ * @return Result containing bound affinity key and the chosen channel ref object.
  */
-var preProcess = function(channelFactory, path, argument) {
+function preProcess(channelFactory: GcpChannelFactory, path: string, argument?: any): {boundKey: string|undefined; channelRef: ChannelRef} {
   var affinityConfig = channelFactory.getAffinityConfig(path);
   var affinityKey;
   if (argument && affinityConfig && affinityConfig.command) {
@@ -192,18 +203,18 @@ var preProcess = function(channelFactory, path, argument) {
 
 /**
  * Handle channel affinity and streams count after call is done.
- * @param {GcpChannelFactory} channelFactory The channel management factory.
- * @param {ChannelRef} channelRef ChannelRef instance that contains a real grpc channel.
- * @param {string} path Method path.
- * @param {string=} boundKey Affinity key bound to a channel.
- * @param {object=} responseMsg Response proto message.
+ * @param channelFactory The channel management factory.
+ * @param channelRef ChannelRef instance that contains a real grpc channel.
+ * @param path Method path.
+ * @param boundKey Affinity key bound to a channel.
+ * @param responseMsg Response proto message.
  */
-var postProcess = function(
-  channelFactory,
-  channelRef,
-  path,
-  boundKey,
-  responseMsg
+function postProcess (
+  channelFactory: GcpChannelFactory,
+  channelRef: ChannelRef,
+  path: string,
+  boundKey?: string,
+  responseMsg?: any
 ) {
   if (!channelFactory || !responseMsg) return;
   var affinityConfig = channelFactory.getAffinityConfig(path);
@@ -224,11 +235,11 @@ var postProcess = function(
 
 /**
  * Retrieve affinity key specified in the proto message.
- * @param {string} affinityKeyName affinity key locator.
- * @param {object} message proto message that contains affinity info.
- * @return {string} Affinity key string.
+ * @param affinityKeyName affinity key locator.
+ * @param message proto message that contains affinity info.
+ * @return Affinity key string.
  */
-var getAffinityKeyFromMessage = function(affinityKeyName, message) {
+function getAffinityKeyFromMessage(affinityKeyName: string, message: any): string {
   if (affinityKeyName) {
     var currMessage = message;
     var names = affinityKeyName.split('.');
@@ -250,4 +261,4 @@ var getAffinityKeyFromMessage = function(affinityKeyName, message) {
   return '';
 };
 
-exports.GcpChannelFactory = GcpChannelFactory;
+export {GcpChannelFactory};

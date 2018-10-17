@@ -16,53 +16,56 @@
  *
  */
 
-'use strict';
+import {Channel} from 'grpc';
 
 /**
  * A wrapper of real grpc channel. Also provides helper functions to
  * calculate affinity counts and active streams count.
  */
-class ChannelRef {
+export class ChannelRef {
+  private readonly channel: Channel;
+  private readonly channelId: number;
+  private affinityCount: number;
+  private activeStreamsCount: number;
+
   /**
    * @param {grpc.Channel} channel The underlying grpc channel.
    * @param {number} channelId Id for creating unique channel.
    * @param {number=} affinityCount Initial affinity count.
    * @param {number=} activeStreamsCount Initial streams count.
    */
-  constructor(channel, channelId, affinityCount, activeStreamsCount) {
-    this._channel = channel;
-    this._channelId = channelId;
-    this._affinityCount = affinityCount ? affinityCount : 0;
-    this._activeStreamsCount = activeStreamsCount ? activeStreamsCount : 0;
+  constructor(channel: Channel, channelId: number, affinityCount?: number, activeStreamsCount?: number) {
+    this.channel = channel;
+    this.channelId = channelId;
+    this.affinityCount = affinityCount ? affinityCount : 0;
+    this.activeStreamsCount = activeStreamsCount ? activeStreamsCount : 0;
   }
 
   affinityCountIncr() {
-    this._affinityCount++;
+    this.affinityCount++;
   }
 
   activeStreamsCountIncr() {
-    this._activeStreamsCount++;
+    this.activeStreamsCount++;
   }
 
   affinityCountDecr() {
-    this._affinityCount--;
+    this.affinityCount--;
   }
 
   activeStreamsCountDecr() {
-    this._activeStreamsCount--;
+    this.activeStreamsCount--;
   }
 
   getAffinityCount() {
-    return this._affinityCount;
+    return this.affinityCount;
   }
 
   getActiveStreamsCount() {
-    return this._activeStreamsCount;
+    return this.activeStreamsCount;
   }
 
   getChannel() {
-    return this._channel;
+    return this.channel;
   }
 }
-
-module.exports = ChannelRef;
