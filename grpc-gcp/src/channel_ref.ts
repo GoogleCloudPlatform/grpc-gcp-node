@@ -29,10 +29,10 @@ export class ChannelRef {
   private activeStreamsCount: number;
 
   /**
-   * @param {grpc.Channel} channel The underlying grpc channel.
-   * @param {number} channelId Id for creating unique channel.
-   * @param {number=} affinityCount Initial affinity count.
-   * @param {number=} activeStreamsCount Initial streams count.
+   * @param channel The underlying grpc channel.
+   * @param channelId Id for creating unique channel.
+   * @param affinityCount Initial affinity count.
+   * @param activeStreamsCount Initial streams count.
    */
   constructor(channel: Channel, channelId: number, affinityCount?: number, activeStreamsCount?: number) {
     this.channel = channel;

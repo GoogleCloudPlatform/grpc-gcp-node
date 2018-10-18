@@ -4,11 +4,12 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "build/src/index.js",
   "scripts": {
-    "integration-tests": "./node_modules/.bin/_mocha test/integration/*.js --reporter spec --timeout 600000",
+    "build": "tsc && cp -r src/generated build/src/",
+    "integration-tests": "./node_modules/.bin/_mocha test/integration/*.js --reporter spec --timeout 10000",
     "unit-tests": "./node_modules/.bin/_mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
     "tslint": "./node_modules/.bin/tslint -c node_modules/gts/tslint.json -p . -t codeFrame --type-check",
-    "prettier": "prettier --write src/*.js src/*/*.js test/*.js test/*/*.js",
+    "prettier": "prettier --write src/*.ts test/**/*.js",
     "coverage": "nyc ./node_modules/.bin/_mocha test/unit test/integration --reporter spec --timeout 600000"
   },
   "repository": {
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",
+    "bluebird": "^3.5.2",
     "eslint": "^5.5.0",
     "eslint-config-prettier": "^3.0.1",
     "eslint-plugin-node": "^7.0.1",
@@ -57,5 +59,8 @@
       "src/generated",
       "test"
     ]
-  }
+  },
+  "files": [
+    "build/src/**/*.{js,d.ts}"
+  ]
 }

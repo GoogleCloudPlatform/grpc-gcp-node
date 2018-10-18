@@ -15,29 +15,24 @@
  * limitations under the License.
  *
  */
-
-'use strict';
-
 import * as grpc from 'grpc';
 import * as _ from 'lodash';
 import * as protobuf from 'protobufjs';
 import * as util from 'util';
 
 import {GcpChannelFactory} from './gcp_channel_factory';
-import { ChannelRef } from './channel_ref';
+import {ChannelRef} from './channel_ref';
+import * as protoRoot from './generated/grpc_gcp';
 
-const PROTO_PATH = __dirname + '/protos/grpc_gcp.proto';
-
-var protoRoot = protobuf.loadSync(PROTO_PATH);
-const ApiConfig: any = protoRoot.lookupType('grpc.gcp.ApiConfig');
-const AffinityConfig: any = protoRoot.lookupType('grpc.gcp.AffinityConfig');
+import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
+import AffinityConfig = protoRoot.grpc.gcp.AffinityConfig
 
 /**
  * Create ApiConfig proto message from config object.
  * @param apiDefinition Api object that specifies channel pool configuation.
  * @return A protobuf message type.
  */
-export function createGcpApiConfig(apiDefinition: {}) : protobuf.Message {
+export function createGcpApiConfig(apiDefinition: {}) : ApiConfig {
   var apiConfigMsg = ApiConfig.fromObject(apiDefinition);
   return apiConfigMsg;
 };

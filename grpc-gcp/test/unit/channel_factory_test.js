@@ -20,7 +20,7 @@
 
 var assert = require('assert');
 const grpc = require('grpc');
-const grpcGcp = require('../..');
+const grpcGcp = require('../../build/src');
 
 /**
  * This is used for testing functions with multiple asynchronous calls that
