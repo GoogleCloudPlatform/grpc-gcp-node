@@ -20,8 +20,8 @@ import * as _ from 'lodash';
 import * as protobuf from 'protobufjs';
 import * as util from 'util';
 
-import {GcpChannelFactory} from './gcp_channel_factory';
 import {ChannelRef} from './channel_ref';
+import {GcpChannelFactory} from './gcp_channel_factory';
 import * as protoRoot from './generated/grpc_gcp';
 
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
@@ -193,7 +193,8 @@ export function gcpCallInvocationTransformer<RequestType, ResponseType>(
  * @param channelFactory The channel management factory.
  * @param path Method path.
  * @param argument The request arguments object.
- * @return Result containing bound affinity key and the chosen channel ref object.
+ * @return Result containing bound affinity key and the chosen channel ref
+ * object.
  */
 function preProcess(
   channelFactory: GcpChannelFactory,
@@ -203,11 +204,11 @@ function preProcess(
 ): {boundKey: string | undefined; channelRef: ChannelRef} {
   const affinityConfig = channelFactory.getAffinityConfig(path);
   let boundKey;
-  if (argument && affinityConfig && affinityConfig.command) {
+  if (argument && affinityConfig) {
     const command = affinityConfig.command;
-    if (command && (
+    if (
       command === AffinityConfig.Command.BOUND ||
-      command === AffinityConfig.Command.UNBIND)
+      command === AffinityConfig.Command.UNBIND
     ) {
       boundKey = getAffinityKeyFromMessage(
         affinityConfig.affinityKey,
@@ -263,9 +264,9 @@ function postProcess(
  * @return Affinity key string.
  */
 function getAffinityKeyFromMessage(
+  affinityKeyName: string | null | undefined,
   // tslint:disable-next-line:no-any protobuf message
-  message: any,
-  affinityKeyName?: string
+  message: any
 ): string {
   if (affinityKeyName) {
     let currMessage = message;

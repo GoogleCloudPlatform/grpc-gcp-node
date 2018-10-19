@@ -19,8 +19,10 @@
 import * as grpc from 'grpc';
 import * as _ from 'lodash';
 import * as protobuf from 'protobufjs';
-import * as protoRoot from './generated/grpc_gcp';
+
 import {ChannelRef} from './channel_ref';
+import * as protoRoot from './generated/grpc_gcp';
+
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import IAffinityConfig = protoRoot.grpc.gcp.IAffinityConfig;
 

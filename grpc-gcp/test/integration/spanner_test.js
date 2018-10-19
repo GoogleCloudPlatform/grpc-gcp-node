@@ -28,7 +28,6 @@ const {GoogleAuth} = require('google-auth-library');
 const spannerGrpc = require('../google/spanner/v1/spanner_grpc_pb.js');
 const spanner = require('../google/spanner/v1/spanner_pb.js');
 const fs = require('fs');
-const Promise = require('bluebird');
 
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
