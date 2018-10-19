@@ -25,17 +25,16 @@ import {ChannelRef} from './channel_ref';
 import * as protoRoot from './generated/grpc_gcp';
 
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
-import AffinityConfig = protoRoot.grpc.gcp.AffinityConfig
+import AffinityConfig = protoRoot.grpc.gcp.AffinityConfig;
 
 /**
  * Create ApiConfig proto message from config object.
  * @param apiDefinition Api object that specifies channel pool configuation.
  * @return A protobuf message type.
  */
-export function createGcpApiConfig(apiDefinition: {}) : ApiConfig {
-  var apiConfigMsg = ApiConfig.fromObject(apiDefinition);
-  return apiConfigMsg;
-};
+export function createGcpApiConfig(apiDefinition: {}): ApiConfig {
+  return ApiConfig.fromObject(apiDefinition);
+}
 
 /**
  * Function for creating a gcp channel factory.
@@ -51,32 +50,42 @@ export function gcpChannelFactoryOverride(
   options: {}
 ) {
   return new GcpChannelFactory(address, credentials, options);
-};
+}
 
-export interface MethodDefinition {
+export interface MethodDefinition<RequestType, ResponseType> {
   path: string;
   requestStream: boolean;
   responseStream: boolean;
-  requestSerialize: grpc.serialize<any>;
-  responseDeserialize: grpc.deserialize<any>;
+  requestSerialize: grpc.serialize<RequestType>;
+  responseDeserialize: grpc.deserialize<ResponseType>;
 }
 
-export interface InputCallProperties {
+export interface InputCallProperties<RequestType, ResponseType> {
+  // tslint:disable-next-line:no-any protobuf message
   argument?: any;
   metadata: grpc.Metadata;
-  call: grpc.ClientUnaryCall | grpc.ClientReadableStream<any> | grpc.ClientDuplexStream<any, any> | grpc.ClientWritableStream<any>;
+  call:
+    | grpc.ClientUnaryCall
+    | grpc.ClientReadableStream<RequestType>
+    | grpc.ClientDuplexStream<RequestType, ResponseType>
+    | grpc.ClientWritableStream<RequestType>;
   channel: GcpChannelFactory;
-  methodDefinition: MethodDefinition;
+  methodDefinition: MethodDefinition<RequestType, ResponseType>;
   callOptions: grpc.CallOptions;
   callback?: Function;
 }
 
-export interface OutputCallProperties {
+export interface OutputCallProperties<RequestType, ResponseType> {
+  // tslint:disable-next-line:no-any protobuf message
   argument?: any;
   metadata: grpc.Metadata;
-  call: grpc.ClientUnaryCall | grpc.ClientReadableStream<any> | grpc.ClientDuplexStream<any, any> | grpc.ClientWritableStream<any>;
+  call:
+    | grpc.ClientUnaryCall
+    | grpc.ClientReadableStream<RequestType>
+    | grpc.ClientDuplexStream<RequestType, ResponseType>
+    | grpc.ClientWritableStream<RequestType>;
   channel: grpc.Channel;
-  methodDefinition: MethodDefinition;
+  methodDefinition: MethodDefinition<RequestType, ResponseType>;
   callOptions: grpc.CallOptions;
   callback?: Function;
 }
@@ -89,40 +98,52 @@ export interface OutputCallProperties {
  * @param callProperties Call properties with channel factory object.
  * @return Modified call properties with selected grpc channel object.
  */
-export function gcpCallInvocationTransformer(callProperties: InputCallProperties): OutputCallProperties {
-  var channelFactory = callProperties.channel;
+export function gcpCallInvocationTransformer<RequestType, ResponseType>(
+  callProperties: InputCallProperties<RequestType, ResponseType>
+): OutputCallProperties<RequestType, ResponseType> {
+  const channelFactory = callProperties.channel;
   if (!channelFactory || !(channelFactory instanceof GcpChannelFactory)) {
     // The gcpCallInvocationTransformer needs to use gcp channel factory.
     return callProperties;
   }
 
-  var argument = callProperties.argument;
-  var metadata = callProperties.metadata;
-  var call = callProperties.call;
-  var methodDefinition = callProperties.methodDefinition;
-  var path = methodDefinition.path;
-  var callOptions = callProperties.callOptions;
-  var callback = callProperties.callback;
+  const argument = callProperties.argument;
+  const metadata = callProperties.metadata;
+  const call = callProperties.call;
+  const methodDefinition = callProperties.methodDefinition;
+  const path = methodDefinition.path;
+  const callOptions = callProperties.callOptions;
+  const callback = callProperties.callback;
 
-  var preProcessResult = preProcess(channelFactory, path, argument);
-  var channelRef = preProcessResult.channelRef;
+  const preProcessResult = preProcess(channelFactory, path, argument);
+  const channelRef = preProcessResult.channelRef;
 
-  var boundKey = preProcessResult.boundKey;
+  const boundKey = preProcessResult.boundKey;
 
-  var postProcessInterceptor = function(options: any, nextCall: Function): grpc.InterceptingCall {
-    var firstMessage: any;
+  const postProcessInterceptor = (
+    // tslint:disable-next-line:no-any options can be any object
+    options: any,
+    nextCall: Function
+  ): grpc.InterceptingCall => {
+    // tslint:disable-next-line:no-any protobuf message
+    let firstMessage: any;
 
-    var requester = {
-      start: function(metadata: grpc.Metadata, listener: grpc.Listener, next: Function): void {
-        var newListener = {
-          onReceiveMetadata: function(metadata: grpc.Metadata, next: Function) {
+    const requester = {
+      start: (
+        metadata: grpc.Metadata,
+        listener: grpc.Listener,
+        next: Function
+      ): void => {
+        const newListener = {
+          onReceiveMetadata: (metadata: grpc.Metadata, next: Function) => {
             next(metadata);
           },
-          onReceiveMessage: function(message: any, next: Function) {
+          // tslint:disable-next-line:no-any protobuf message
+          onReceiveMessage: (message: any, next: Function) => {
             if (!firstMessage) firstMessage = message;
             next(message);
           },
-          onReceiveStatus: function(status: grpc.StatusObject, next: Function) {
+          onReceiveStatus: (status: grpc.StatusObject, next: Function) => {
             if (status.code === grpc.status.OK) {
               postProcess(
                 channelFactory,
@@ -137,13 +158,14 @@ export function gcpCallInvocationTransformer(callProperties: InputCallProperties
         };
         next(metadata, newListener);
       },
-      sendMessage: function(message: any, next: Function): void {
+      // tslint:disable-next-line:no-any protobuf message
+      sendMessage: (message: any, next: Function): void => {
         next(message);
       },
-      halfClose: function(next: Function): void {
+      halfClose: (next: Function): void => {
         next();
       },
-      cancel: function(next: Function): void {
+      cancel: (next: Function): void => {
         next();
       },
     };
@@ -151,20 +173,20 @@ export function gcpCallInvocationTransformer(callProperties: InputCallProperties
   };
 
   // Append interceptor to existing interceptors list.
-  var newCallOptions = _.assign({}, callOptions);
-  var interceptors = callOptions.interceptors ? callOptions.interceptors : [];
+  const newCallOptions = _.assign({}, callOptions);
+  const interceptors = callOptions.interceptors ? callOptions.interceptors : [];
   newCallOptions.interceptors = interceptors.concat([postProcessInterceptor]);
 
   return {
-    argument: argument,
-    metadata: metadata,
-    call: call,
+    argument,
+    metadata,
+    call,
     channel: channelRef.getChannel(),
-    methodDefinition: methodDefinition,
+    methodDefinition,
     callOptions: newCallOptions,
-    callback: callback,
+    callback,
   };
-};
+}
 
 /**
  * Handle channel affinity and pick a channel before call starts.
@@ -173,28 +195,33 @@ export function gcpCallInvocationTransformer(callProperties: InputCallProperties
  * @param argument The request arguments object.
  * @return Result containing bound affinity key and the chosen channel ref object.
  */
-function preProcess(channelFactory: GcpChannelFactory, path: string, argument?: any): {boundKey: string|undefined; channelRef: ChannelRef} {
-  var affinityConfig = channelFactory.getAffinityConfig(path);
-  var affinityKey;
+function preProcess(
+  channelFactory: GcpChannelFactory,
+  path: string,
+  // tslint:disable-next-line:no-any protobuf message
+  argument?: any
+): {boundKey: string | undefined; channelRef: ChannelRef} {
+  const affinityConfig = channelFactory.getAffinityConfig(path);
+  let boundKey;
   if (argument && affinityConfig && affinityConfig.command) {
-    let command = affinityConfig.command;
-    if (
+    const command = affinityConfig.command;
+    if (command && (
       command === AffinityConfig.Command.BOUND ||
-      command === AffinityConfig.Command.UNBIND
+      command === AffinityConfig.Command.UNBIND)
     ) {
-      affinityKey = getAffinityKeyFromMessage(
+      boundKey = getAffinityKeyFromMessage(
         affinityConfig.affinityKey,
         argument
       );
     }
   }
-  var channelRef = channelFactory.getChannelRef(affinityKey);
+  const channelRef = channelFactory.getChannelRef(boundKey);
   channelRef.activeStreamsCountIncr();
   return {
-    boundKey: affinityKey,
-    channelRef: channelRef,
+    boundKey,
+    channelRef,
   };
-};
+}
 
 /**
  * Handle channel affinity and streams count after call is done.
@@ -204,19 +231,20 @@ function preProcess(channelFactory: GcpChannelFactory, path: string, argument?: 
  * @param boundKey Affinity key bound to a channel.
  * @param responseMsg Response proto message.
  */
-function postProcess (
+function postProcess(
   channelFactory: GcpChannelFactory,
   channelRef: ChannelRef,
   path: string,
   boundKey?: string,
+  // tslint:disable-next-line:no-any protobuf message
   responseMsg?: any
 ) {
   if (!channelFactory || !responseMsg) return;
-  var affinityConfig = channelFactory.getAffinityConfig(path);
+  const affinityConfig = channelFactory.getAffinityConfig(path);
   if (affinityConfig && affinityConfig.command) {
-    var command = affinityConfig.command;
+    const command = affinityConfig.command;
     if (command === AffinityConfig.Command.BIND) {
-      var affinityKey = getAffinityKeyFromMessage(
+      const affinityKey = getAffinityKeyFromMessage(
         affinityConfig.affinityKey,
         responseMsg
       );
@@ -226,7 +254,7 @@ function postProcess (
     }
   }
   channelRef.activeStreamsCountDecr();
-};
+}
 
 /**
  * Retrieve affinity key specified in the proto message.
@@ -234,13 +262,17 @@ function postProcess (
  * @param message proto message that contains affinity info.
  * @return Affinity key string.
  */
-function getAffinityKeyFromMessage(affinityKeyName: string, message: any): string {
+function getAffinityKeyFromMessage(
+  // tslint:disable-next-line:no-any protobuf message
+  message: any,
+  affinityKeyName?: string
+): string {
   if (affinityKeyName) {
-    var currMessage = message;
-    var names = affinityKeyName.split('.');
-    var i = 0;
+    let currMessage = message;
+    const names = affinityKeyName.split('.');
+    let i = 0;
     for (; i < names.length; i++) {
-      let getter =
+      const getter =
         'get' + names[i].charAt(0).toUpperCase() + names[i].substr(1);
       if (!currMessage || typeof currMessage[getter] !== 'function') break;
       currMessage = currMessage[getter]();
@@ -254,6 +286,6 @@ function getAffinityKeyFromMessage(affinityKeyName: string, message: any): strin
     )
   );
   return '';
-};
+}
 
 export {GcpChannelFactory};

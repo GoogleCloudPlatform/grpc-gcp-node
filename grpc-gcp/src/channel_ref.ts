@@ -34,7 +34,12 @@ export class ChannelRef {
    * @param affinityCount Initial affinity count.
    * @param activeStreamsCount Initial streams count.
    */
-  constructor(channel: Channel, channelId: number, affinityCount?: number, activeStreamsCount?: number) {
+  constructor(
+    channel: Channel,
+    channelId: number,
+    affinityCount?: number,
+    activeStreamsCount?: number
+  ) {
     this.channel = channel;
     this.channelId = channelId;
     this.affinityCount = affinityCount ? affinityCount : 0;

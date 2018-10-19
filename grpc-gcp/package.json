@@ -8,7 +8,7 @@
     "integration-tests": "./node_modules/.bin/_mocha test/integration/*.js --reporter spec --timeout 10000",
     "unit-tests": "./node_modules/.bin/_mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
-    "tslint": "./node_modules/.bin/tslint -c node_modules/gts/tslint.json -p . -t codeFrame --type-check",
+    "tslint": "./node_modules/.bin/tslint -c node_modules/gts/tslint.json -p . -t codeFrame",
     "prettier": "prettier --write src/*.ts test/**/*.js",
     "coverage": "nyc ./node_modules/.bin/_mocha test/unit test/integration --reporter spec --timeout 600000"
   },

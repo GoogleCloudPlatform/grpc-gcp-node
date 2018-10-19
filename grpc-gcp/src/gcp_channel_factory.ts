@@ -19,7 +19,10 @@
 import * as grpc from 'grpc';
 import * as _ from 'lodash';
 import * as protobuf from 'protobufjs';
+import * as protoRoot from './generated/grpc_gcp';
 import {ChannelRef} from './channel_ref';
+import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
+import IAffinityConfig = protoRoot.grpc.gcp.IAffinityConfig;
 
 const CLIENT_CHANNEL_ID = 'grpc_gcp.client_channel.id';
 
@@ -30,9 +33,9 @@ export class GcpChannelFactory {
   private maxSize: number;
   private maxConcurrentStreamsLowWatermark: number;
   private options: {};
-  private methodToAffinity: {[methodName: string]: any} = {};
+  private methodToAffinity: {[key: string]: IAffinityConfig} = {};
   private affinityKeyToChannelRef: {[affinityKey: string]: ChannelRef} = {};
-  private channelRefs: Array<ChannelRef> = [];
+  private channelRefs: ChannelRef[] = [];
   private target: string;
   private credentials: grpc.ChannelCredentials;
 
@@ -41,7 +44,12 @@ export class GcpChannelFactory {
    * @param credentials Channel credentials to use when connecting
    * @param options A map of channel options.
    */
-  constructor(address: string, credentials: grpc.ChannelCredentials, options: any) {
+  constructor(
+    address: string,
+    credentials: grpc.ChannelCredentials,
+    // tslint:disable-next-line:no-any options can be any object
+    options: any
+  ) {
     if (!options) {
       options = {};
     }
@@ -52,10 +60,10 @@ export class GcpChannelFactory {
     }
     this.maxSize = 10;
     this.maxConcurrentStreamsLowWatermark = 100;
-    var gcpApiConfig = options.gcpApiConfig;
+    const gcpApiConfig = options.gcpApiConfig;
     if (gcpApiConfig) {
       if (gcpApiConfig.channelPool) {
-        var channelPool = gcpApiConfig.channelPool;
+        const channelPool = gcpApiConfig.channelPool;
         if (channelPool.maxSize) this.maxSize = channelPool.maxSize;
         if (channelPool.maxConcurrentStreamsLowWatermark) {
           this.maxConcurrentStreamsLowWatermark =
@@ -71,14 +79,20 @@ export class GcpChannelFactory {
     this.getChannelRef();
   }
 
-  private initMethodToAffinityMap(gcpApiConfig: any): void {
-    var methodList = gcpApiConfig.method;
-    for (let i = 0; i < methodList.length; i++) {
-      let method = methodList[i];
-      let nameList = method.name;
-      for (let j = 0; j < nameList.length; j++) {
-        let methodName = nameList[j];
-        if (method.affinity) this.methodToAffinity[methodName] = method.affinity;
+  private initMethodToAffinityMap(gcpApiConfig: ApiConfig): void {
+    const methodList = gcpApiConfig.method;
+    if (methodList) {
+      for (let i = 0; i < methodList.length; i++) {
+        const method = methodList[i];
+        const nameList = method.name;
+        if (nameList) {
+          for (let j = 0; j < nameList.length; j++) {
+            const methodName = nameList[j];
+            if (method.affinity) {
+              this.methodToAffinity[methodName] = method.affinity;
+            }
+          }
+        }
       }
     }
   }
@@ -88,7 +102,7 @@ export class GcpChannelFactory {
    * @param affinityKey Affinity key to get the bound channel.
    * @return Wrapper containing the grpc channel.
    */
-  public getChannelRef(affinityKey?: string): ChannelRef {
+  getChannelRef(affinityKey?: string): ChannelRef {
     if (affinityKey && this.affinityKeyToChannelRef[affinityKey]) {
       // Chose an bound channel if affinityKey is specified.
       return this.affinityKeyToChannelRef[affinityKey];
@@ -99,7 +113,7 @@ export class GcpChannelFactory {
       return ref1.getActiveStreamsCount() - ref2.getActiveStreamsCount();
     });
 
-    var size = this.channelRefs.length;
+    const size = this.channelRefs.length;
     // Chose the channelRef that has the least busy channel.
     if (
       size > 0 &&
@@ -112,14 +126,14 @@ export class GcpChannelFactory {
     // If all existing channels are busy, and channel pool still has capacity,
     // create a new channel in the pool.
     if (size < this.maxSize) {
-      var channelOptions = {[CLIENT_CHANNEL_ID]: size};
+      const channelOptions = {[CLIENT_CHANNEL_ID]: size};
       _.merge(channelOptions, this.options);
-      var grpcChannel = new grpc.Channel(
+      const grpcChannel = new grpc.Channel(
         this.target,
         this.credentials,
         channelOptions
       );
-      var channelRef = new ChannelRef(grpcChannel, size);
+      const channelRef = new ChannelRef(grpcChannel, size);
       this.channelRefs.push(channelRef);
       return channelRef;
     } else {
@@ -131,7 +145,7 @@ export class GcpChannelFactory {
    * Get AffinityConfig associated with a certain method.
    * @param methodName Method name of the request.
    */
-  public getAffinityConfig(methodName: string): any {
+  getAffinityConfig(methodName: string): IAffinityConfig {
     return this.methodToAffinity[methodName];
   }
 
@@ -140,9 +154,9 @@ export class GcpChannelFactory {
    * @param channelRef ChannelRef instance that contains the grpc channel.
    * @param affinityKey The affinity key used for binding the channel.
    */
-  public bind(channelRef: ChannelRef, affinityKey: string): void {
+  bind(channelRef: ChannelRef, affinityKey: string): void {
     if (!affinityKey || !channelRef) return;
-    var existingChannelRef = this.affinityKeyToChannelRef[affinityKey];
+    const existingChannelRef = this.affinityKeyToChannelRef[affinityKey];
     if (!existingChannelRef) {
       this.affinityKeyToChannelRef[affinityKey] = channelRef;
     }
@@ -153,9 +167,9 @@ export class GcpChannelFactory {
    * Unbind channel with affinity key.
    * @param boundKey Affinity key bound to a channel.
    */
-  public unbind(boundKey?: string): void {
+  unbind(boundKey?: string): void {
     if (!boundKey) return;
-    var boundChannelRef = this.affinityKeyToChannelRef[boundKey];
+    const boundChannelRef = this.affinityKeyToChannelRef[boundKey];
     if (boundChannelRef) {
       boundChannelRef.affinityCountDecr();
       if (boundChannelRef.getAffinityCount() <= 0) {
@@ -167,13 +181,13 @@ export class GcpChannelFactory {
   /**
    * Close all channels in the channel pool.
    */
-  public close(): void {
+  close(): void {
     this.channelRefs.forEach(ref => {
       ref.getChannel().close();
     });
   }
 
-  public getTarget(): string {
+  getTarget(): string {
     return this.target;
   }
 
@@ -184,16 +198,16 @@ export class GcpChannelFactory {
    *     call starts.
    * @return connectivity state of channel pool.
    */
-  public getConnectivityState(tryToConnect: boolean): grpc.connectivityState {
-    var ready = 0;
-    var idle = 0;
-    var connecting = 0;
-    var transientFailure = 0;
-    var shutdown = 0;
+  getConnectivityState(tryToConnect: boolean): grpc.connectivityState {
+    let ready = 0;
+    let idle = 0;
+    let connecting = 0;
+    let transientFailure = 0;
+    let shutdown = 0;
 
     for (let i = 0; i < this.channelRefs.length; i++) {
-      var grpcChannel = this.channelRefs[i].getChannel();
-      var state = grpcChannel.getConnectivityState(tryToConnect);
+      const grpcChannel = this.channelRefs[i].getChannel();
+      const state = grpcChannel.getConnectivityState(tryToConnect);
       switch (state) {
         case grpc.connectivityState.READY:
           ready++;
@@ -209,6 +223,8 @@ export class GcpChannelFactory {
           break;
         case grpc.connectivityState.IDLE:
           idle++;
+          break;
+        default:
           break;
       }
     }
@@ -240,7 +256,11 @@ export class GcpChannelFactory {
    * @param callback Called with no error when the state changes, or with an
    *     error if the deadline passes without a state change
    */
-  watchConnectivityState(currentState: grpc.connectivityState, deadline: grpc.Deadline, callback: Function): void {
+  watchConnectivityState(
+    currentState: grpc.connectivityState,
+    deadline: grpc.Deadline,
+    callback: Function
+  ): void {
     throw new Error('Function watchConnectivityState not implemented!');
   }
 
@@ -257,8 +277,14 @@ export class GcpChannelFactory {
    *     from parentCall.
    * @return a grpc call object.
    */
-  createCall(method: string, deadline: grpc.Deadline, host: string|null, parentCall: grpc.Call|null, propagateFlags: number|null): grpc.Call {
-    var grpcChannel = this.getChannelRef().getChannel();
+  createCall(
+    method: string,
+    deadline: grpc.Deadline,
+    host: string | null,
+    parentCall: grpc.Call | null,
+    propagateFlags: number | null
+  ): grpc.Call {
+    const grpcChannel = this.getChannelRef().getChannel();
     return grpcChannel.createCall(
       method,
       deadline,
