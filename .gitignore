@@ -7,7 +7,7 @@ npm-debug.log
 .nyc_output
 coverage
 
-# generated code for tests
+# generated code
 grpc-gcp/test/google
 cloudprober/google
-
+grpc-gcp/src/generated
