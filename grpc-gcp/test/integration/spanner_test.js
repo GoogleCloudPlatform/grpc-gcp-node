@@ -35,7 +35,7 @@ const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
 const _TEST_SQL = 'select id from storage';
 const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
-const grpcGcp = require('../..');
+const grpcGcp = require('../../build/src');
 
 describe('Spanner integration tests', () => {
   let client;
@@ -117,9 +117,9 @@ describe('Spanner integration tests', () => {
       assert.ifError(err);
       var sessionName = session.getName();
 
-      assert.strictEqual(pool._channelRefs.length, 1);
-      assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
-      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+      assert.strictEqual(pool.channelRefs.length, 1);
+      assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
+      assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
       var executeSqlRequest = new spanner.ExecuteSqlRequest();
       executeSqlRequest.setSession(sessionName);
@@ -131,18 +131,18 @@ describe('Spanner integration tests', () => {
         var value = rowsList[0].getValuesList()[0].getStringValue();
 
         assert.strictEqual(value, 'payload');
-        assert.strictEqual(pool._channelRefs.length, 1);
-        assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
-        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+        assert.strictEqual(pool.channelRefs.length, 1);
+        assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
+        assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
         var deleteSessionRequest = new spanner.DeleteSessionRequest();
         deleteSessionRequest.setName(sessionName);
 
         client.deleteSession(deleteSessionRequest, err => {
           assert.ifError(err);
-          assert.strictEqual(pool._channelRefs.length, 1);
-          assert.strictEqual(pool._channelRefs[0]._affinityCount, 0);
-          assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+          assert.strictEqual(pool.channelRefs.length, 1);
+          assert.strictEqual(pool.channelRefs[0].affinityCount, 0);
+          assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
           done();
         });
       });
@@ -156,18 +156,18 @@ describe('Spanner integration tests', () => {
       assert.ifError(err);
       var sessionName = session.getName();
 
-      assert.strictEqual(pool._channelRefs.length, 1);
-      assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
-      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+      assert.strictEqual(pool.channelRefs.length, 1);
+      assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
+      assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
       var executeSqlRequest = new spanner.ExecuteSqlRequest();
       executeSqlRequest.setSession(sessionName);
       executeSqlRequest.setSql(_TEST_SQL);
       var call = client.executeStreamingSql(executeSqlRequest);
 
-      assert.strictEqual(pool._channelRefs.length, 1);
-      assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
-      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 1);
+      assert.strictEqual(pool.channelRefs.length, 1);
+      assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
+      assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 1);
 
       call.on('data', partialResultSet => {
         var value = partialResultSet.getValuesList()[0].getStringValue();
@@ -176,9 +176,9 @@ describe('Spanner integration tests', () => {
 
       call.on('status', status => {
         assert.strictEqual(status.code, grpc.status.OK);
-        assert.strictEqual(pool._channelRefs.length, 1);
-        assert.strictEqual(pool._channelRefs[0]._affinityCount, 1);
-        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+        assert.strictEqual(pool.channelRefs.length, 1);
+        assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
+        assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
       });
 
       call.on('end', function() {
@@ -186,9 +186,9 @@ describe('Spanner integration tests', () => {
         deleteSessionRequest.setName(sessionName);
         client.deleteSession(deleteSessionRequest, err => {
           assert.ifError(err);
-          assert.strictEqual(pool._channelRefs.length, 1);
-          assert.strictEqual(pool._channelRefs[0]._affinityCount, 0);
-          assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
+          assert.strictEqual(pool.channelRefs.length, 1);
+          assert.strictEqual(pool.channelRefs[0].affinityCount, 0);
+          assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
           done();
         });
       });
@@ -197,7 +197,7 @@ describe('Spanner integration tests', () => {
 
   it('Test concurrent streams watermark', done => {
     var watermark = 5;
-    pool._maxConcurrentStreamsLowWatermark = watermark;
+    pool.maxConcurrentStreamsLowWatermark = watermark;
 
     var expectedNumChannels = 3;
 
@@ -226,38 +226,52 @@ describe('Spanner integration tests', () => {
       createCallPromises.push(promise);
     }
 
-    Promise.all(createCallPromises).then(results => {
-      assert.strictEqual(pool._channelRefs.length, expectedNumChannels);
-      assert.strictEqual(pool._channelRefs[0]._affinityCount, watermark);
-      assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, watermark);
+    Promise.all(createCallPromises)
+      .then(
+        results => {
+          assert.strictEqual(pool.channelRefs.length, expectedNumChannels);
+          assert.strictEqual(pool.channelRefs[0].affinityCount, watermark);
+          assert.strictEqual(pool.channelRefs[0].activeStreamsCount, watermark);
 
-      // Consume streaming calls.
-      var emitterPromises = results.map(
-        result =>
-          new Promise(resolve => {
-            result.call.on('data', partialResultSet => {
-              var value = partialResultSet.getValuesList()[0].getStringValue();
-              assert.strictEqual(value, 'payload');
-            });
-            result.call.on('end', () => {
-              var deleteSessionRequest = new spanner.DeleteSessionRequest();
-              deleteSessionRequest.setName(result.sessionName);
-              client.deleteSession(deleteSessionRequest, err => {
-                assert.ifError(err);
-                resolve();
-              });
-            });
-          })
+          // Consume streaming calls.
+          var emitterPromises = results.map(
+            result =>
+              new Promise(resolve => {
+                result.call.on('data', partialResultSet => {
+                  var value = partialResultSet
+                    .getValuesList()[0]
+                    .getStringValue();
+                  assert.strictEqual(value, 'payload');
+                });
+                result.call.on('end', () => {
+                  var deleteSessionRequest = new spanner.DeleteSessionRequest();
+                  deleteSessionRequest.setName(result.sessionName);
+                  client.deleteSession(deleteSessionRequest, err => {
+                    assert.ifError(err);
+                    resolve();
+                  });
+                });
+              })
+          );
+
+          // Make sure all sessions get cleaned.
+          return Promise.all(emitterPromises);
+        },
+        error => {
+          done(error);
+        }
+      )
+      .then(
+        () => {
+          assert.strictEqual(pool.channelRefs.length, expectedNumChannels);
+          assert.strictEqual(pool.channelRefs[0].affinityCount, 0);
+          assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
+          done();
+        },
+        error => {
+          done(error);
+        }
       );
-
-      // Make sure all sessions get cleaned.
-      Promise.all(emitterPromises).then(() => {
-        assert.strictEqual(pool._channelRefs.length, expectedNumChannels);
-        assert.strictEqual(pool._channelRefs[0]._affinityCount, 0);
-        assert.strictEqual(pool._channelRefs[0]._activeStreamsCount, 0);
-        done();
-      });
-    });
   });
 
   it('Test invalid BOUND affinity', done => {

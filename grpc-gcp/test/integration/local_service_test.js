@@ -26,7 +26,7 @@ const grpc = require('grpc');
 const protoLoader = require('@grpc/proto-loader');
 const assert = require('assert');
 const _ = require('lodash');
-const grpcGcp = require('../..');
+const grpcGcp = require('../../build/src');
 
 const PROTO_PATH = __dirname + '/../../protos/test_service.proto';
 
@@ -94,8 +94,8 @@ describe('Local service integration tests', function() {
       );
       var channelFactory = client.getChannel();
       assert(channelFactory instanceof grpcGcp.GcpChannelFactory);
-      assert.strictEqual(channelFactory._maxSize, 10);
-      assert.strictEqual(channelFactory._maxConcurrentStreamsLowWatermark, 100);
+      assert.strictEqual(channelFactory.maxSize, 10);
+      assert.strictEqual(channelFactory.maxConcurrentStreamsLowWatermark, 100);
       done();
     });
     it('no override function', function(done) {
@@ -196,7 +196,10 @@ describe('Local service integration tests', function() {
           });
         });
         it('Should handle two undefined arguments', function(done) {
-          var call = client.unary({}, undefined, undefined, function(err, data) {
+          var call = client.unary({}, undefined, undefined, function(
+            err,
+            data
+          ) {
             assert.ifError(err);
           });
           call.on('metadata', function(metadata) {

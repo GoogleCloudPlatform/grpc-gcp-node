@@ -2,12 +2,15 @@
   "name": "grpc-gcp",
   "version": "0.1.0",
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
-  "main": "index.js",
+  "main": "build/src/index.js",
   "scripts": {
-    "integration-tests": "./node_modules/.bin/_mocha test/integration/*.js --reporter spec --timeout 600000",
-    "unit-tests": "./node_modules/.bin/_mocha test/unit/*.js --reporter spec",
-    "lint": "./node_modules/.bin/eslint src/ test/integration",
-    "prettier": "prettier --write src/*.js src/*/*.js test/*.js test/*/*.js",
+    "build": "./codegen.sh && tsc && cp -r src/generated build/src/",
+    "integration-tests": "mocha test/integration/*.js --reporter spec --timeout 10000",
+    "unit-tests": "mocha test/unit/*.js --reporter spec",
+    "eslint": "./node_modules/.bin/eslint test/integration",
+    "check": "gts check",
+    "fix": "gts fix",
+    "prettier": "prettier --write src/*.ts test/**/*.js",
     "coverage": "nyc ./node_modules/.bin/_mocha test/unit test/integration --reporter spec --timeout 600000"
   },
   "repository": {
@@ -22,6 +25,7 @@
   ],
   "author": "Google Inc.",
   "license": "Apache-2.0",
+  "types": "build/src/index.d.ts",
   "bugs": {
     "url": "https://github.com/GoogleCloudPlatform/grpc-gcp-node/issues"
   },
@@ -32,7 +36,7 @@
   "dependencies": {
     "grpc": "^1.14.1",
     "lodash": "^4.17.11",
-    "protobufjs": "~6.8.8"
+    "protobufjs": "^6.8.8"
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",
@@ -43,14 +47,19 @@
     "google-auth-library": "^2.0.0",
     "google-protobuf": "^3.6.1",
     "grpc-tools": "^1.6.6",
+    "gts": "^0.8.0",
     "mocha": "^5.2.0",
     "nyc": "^13.0.1",
-    "prettier": "^1.14.2"
+    "prettier": "^1.14.2",
+    "typescript": "^3.1.3"
   },
   "nyc": {
     "exclude": [
       "src/generated",
       "test"
     ]
-  }
+  },
+  "files": [
+    "build/src"
+  ]
 }
