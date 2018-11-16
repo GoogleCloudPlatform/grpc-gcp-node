@@ -16,7 +16,6 @@
  *
  */
 import * as grpc from 'grpc';
-import * as _ from 'lodash';
 import * as protobuf from 'protobufjs';
 import * as util from 'util';
 
@@ -173,7 +172,7 @@ export function gcpCallInvocationTransformer<RequestType, ResponseType>(
   };
 
   // Append interceptor to existing interceptors list.
-  const newCallOptions = _.assign({}, callOptions);
+  const newCallOptions = Object.assign({}, callOptions);
   const interceptors = callOptions.interceptors ? callOptions.interceptors : [];
   newCallOptions.interceptors = interceptors.concat([postProcessInterceptor]);
 
