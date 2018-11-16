@@ -17,7 +17,6 @@
  */
 
 import * as grpc from 'grpc';
-import * as _ from 'lodash';
 import * as protobuf from 'protobufjs';
 
 import {ChannelRef} from './channel_ref';
@@ -74,7 +73,9 @@ export class GcpChannelFactory {
       }
       this.initMethodToAffinityMap(gcpApiConfig);
     }
-    this.options = _.omit(options, 'gcpApiConfig');
+
+    delete options.gcpApiConfig;
+    this.options = options;
     this.target = address;
     this.credentials = credentials;
     // Initialize channel in the pool to avoid empty pool.
@@ -128,8 +129,7 @@ export class GcpChannelFactory {
     // If all existing channels are busy, and channel pool still has capacity,
     // create a new channel in the pool.
     if (size < this.maxSize) {
-      const channelOptions = {[CLIENT_CHANNEL_ID]: size};
-      _.merge(channelOptions, this.options);
+      const channelOptions = Object.assign({[CLIENT_CHANNEL_ID]: size}, this.options);
       const grpcChannel = new grpc.Channel(
         this.target,
         this.credentials,
