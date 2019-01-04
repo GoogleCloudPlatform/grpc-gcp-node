@@ -43,7 +43,7 @@
     "@grpc/proto-loader": "0.3.0",
     "eslint": "5.9.0",
     "eslint-config-prettier": "3.3.0",
-    "eslint-plugin-node": "8.0.0",
+    "eslint-plugin-node": "8.0.1",
     "eslint-plugin-prettier": "3.0.0",
     "google-auth-library": "2.0.1",
     "google-gax": "0.22.1",
