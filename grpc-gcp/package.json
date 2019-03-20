@@ -40,7 +40,7 @@
     "protobufjs": "^6.8.8"
   },
   "devDependencies": {
-    "@grpc/proto-loader": "0.3.0",
+    "@grpc/proto-loader": "0.4.0",
     "eslint": "5.15.3",
     "eslint-config-prettier": "3.6.0",
     "eslint-plugin-node": "8.0.0",
