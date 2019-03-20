@@ -46,7 +46,7 @@
     "eslint-plugin-node": "8.0.0",
     "eslint-plugin-prettier": "3.0.0",
     "google-auth-library": "2.0.2",
-    "google-gax": "0.22.1",
+    "google-gax": "0.25.5",
     "google-protobuf": "3.6.1",
     "grpc-tools": "1.6.6",
     "gts": "0.9.0",
