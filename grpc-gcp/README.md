@@ -111,5 +111,9 @@ npm run unit-tests
 Run integration tests.
 
 ```sh
+npm run test-codegen
+```
+
+```sh
 npm run integration-tests
 ```

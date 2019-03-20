@@ -5,8 +5,7 @@
   "main": "build/src/index.js",
   "scripts": {
     "build": "./codegen.sh && tsc && cp -r src/generated build/src/",
-    "preintegration-tests": "npm run build",
-    "preunit-tests": "npm run build",
+    "test-codegen": "./test/codegen.sh",
     "integration-tests": "mocha test/integration/*.js --reporter spec --timeout 10000",
     "unit-tests": "mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
