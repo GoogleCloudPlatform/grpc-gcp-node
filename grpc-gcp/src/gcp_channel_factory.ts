@@ -18,6 +18,7 @@
 
 import * as grpc from 'grpc';
 import * as protobuf from 'protobufjs';
+import {promisify} from 'util';
 
 import {ChannelRef} from './channel_ref';
 import * as protoRoot from './generated/grpc_gcp';
@@ -263,7 +264,19 @@ export class GcpChannelFactory {
     deadline: grpc.Deadline,
     callback: Function
   ): void {
-    throw new Error('Function watchConnectivityState not implemented!');
+    if (!this.channelRefs.length) {
+      callback(new Error(
+        'Cannot watch connectivity state because there are no channels.'));
+      return;
+    }
+
+    const watchers = this.channelRefs.map(channelRef => {
+      const channel = channelRef.getChannel();
+      return promisify(channel.watchConnectivityState)
+        .call(channel, currentState, deadline);
+    });
+
+    Promise.race(watchers).then(() => callback(), callback);
   }
 
   /**
