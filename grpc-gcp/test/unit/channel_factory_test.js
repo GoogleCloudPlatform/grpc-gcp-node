@@ -147,10 +147,25 @@ describe('grpc-gcp channel factory tests', function() {
     afterEach(function() {
       channel.close();
     });
-    it('should throw unimplemented error', function() {
-      assert.throws(() => {
-        channel.watchConnectivityState();
+    it('should throw an error if no channels are available', function(done) {
+      channel.channelRefs = [];
+      channel.watchConnectivityState(0, new Date(), function(err) {
+        assert(err instanceof Error);
+        assert.strictEqual(
+          err.message,
+          'Cannot watch connectivity state because there are no channels.');
+        done();
       });
+    });
+    it('should call channel.watchConnectivityState', function(done) {
+      var fakeState = grpc.connectivityState.READY;
+      var fakeDeadline = new Date();
+      channel.channelRefs[0].watchConnectivityState = function(state, deadline, callback) {
+        assert.strictEqual(state, fakeState);
+        assert.strictEqual(deadline, fakeDeadline);
+        callback();
+      };
+      channel.watchConnectivityState(fakeState, fakeDeadline, done);
     });
   });
   describe('createCall', function() {
