@@ -157,15 +157,30 @@ describe('grpc-gcp channel factory tests', function() {
         done();
       });
     });
+    it('should resolve immediately if the state is different', function(done) {
+      var fakeState = grpc.connectivityState.READY;
+      channel.getConnectivityState = function() {
+        return grpc.connectivityState.IDLE;
+      };
+      channel.watchConnectivityState(fakeState, 1000, function(err) {
+        assert.ifError(err);
+        done();
+      });
+    });
     it('should call channel.watchConnectivityState', function(done) {
       var fakeState = grpc.connectivityState.READY;
-      var fakeDeadline = new Date();
-      channel.channelRefs[0].watchConnectivityState = function(state, deadline, callback) {
-        assert.strictEqual(state, fakeState);
-        assert.strictEqual(deadline, fakeDeadline);
-        callback();
+      channel.getConnectivityState = function() {
+        return fakeState;
       };
-      channel.watchConnectivityState(fakeState, fakeDeadline, done);
+      channel.channelRefs.forEach(channelRef => {
+        channelRef.channel.watchConnectivityState = function(s, d, cb) {
+          channel.getConnectivityState = function() {
+            return grpc.connectivityState.IDLE;
+          };
+          setImmediate(cb);
+        };
+      });
+      channel.watchConnectivityState(fakeState, 1000, done);
     });
   });
   describe('createCall', function() {
