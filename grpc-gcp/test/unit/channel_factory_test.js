@@ -173,7 +173,13 @@ describe('grpc-gcp channel factory tests', function() {
         return fakeState;
       };
       channel.channelRefs.forEach(channelRef => {
+        channelRef.channel.getConnectivityState = function(connect) {
+          assert.strictEqual(connect, false);
+          return fakeState;
+        };
         channelRef.channel.watchConnectivityState = function(s, d, cb) {
+          assert.strictEqual(s, fakeState);
+          assert.strictEqual(d, 1000);
           channel.getConnectivityState = function() {
             return grpc.connectivityState.IDLE;
           };

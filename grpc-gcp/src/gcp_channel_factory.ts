@@ -268,7 +268,6 @@ export class GcpChannelFactory {
       return;
     }
 
-    const startTime = Date.now();
     const connectivityState = this.getConnectivityState(false);
 
     if (connectivityState !== currentState) {
@@ -279,10 +278,9 @@ export class GcpChannelFactory {
     const watchState = async (channelRef: ChannelRef): Promise<void> => {
       const channel = channelRef.getChannel();
       const startingState = channel.getConnectivityState(false);
-      const dl = (deadline as number) - Date.now() - startTime;
 
       await promisify(channel.watchConnectivityState)
-        .call(channel, startingState, dl);
+        .call(channel, startingState, deadline);
 
       const state = this.getConnectivityState(false);
 
