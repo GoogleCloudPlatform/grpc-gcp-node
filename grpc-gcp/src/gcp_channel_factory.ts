@@ -18,6 +18,7 @@
 
 import * as grpc from 'grpc';
 import * as protobuf from 'protobufjs';
+import {promisify} from 'util';
 
 import {ChannelRef} from './channel_ref';
 import * as protoRoot from './generated/grpc_gcp';
@@ -249,9 +250,7 @@ export class GcpChannelFactory {
   }
 
   /**
-   * Watch for connectivity state changes. Currently This function will throw
-   * not implemented error because the implementation requires lot of work but
-   * has little use cases.
+   * Watch for connectivity state changes.
    * @param currentState The state to watch for transitions from. This should
    *     always be populated by calling getConnectivityState immediately before.
    * @param deadline A deadline for waiting for a state change
@@ -261,9 +260,37 @@ export class GcpChannelFactory {
   watchConnectivityState(
     currentState: grpc.connectivityState,
     deadline: grpc.Deadline,
-    callback: Function
+    callback: (error?: Error) => void
   ): void {
-    throw new Error('Function watchConnectivityState not implemented!');
+    if (!this.channelRefs.length) {
+      callback(new Error(
+        'Cannot watch connectivity state because there are no channels.'));
+      return;
+    }
+
+    const connectivityState = this.getConnectivityState(false);
+
+    if (connectivityState !== currentState) {
+      setImmediate(() => callback());
+      return;
+    }
+
+    const watchState = async (channelRef: ChannelRef): Promise<void> => {
+      const channel = channelRef.getChannel();
+      const startingState = channel.getConnectivityState(false);
+
+      await promisify(channel.watchConnectivityState)
+        .call(channel, startingState, deadline);
+
+      const state = this.getConnectivityState(false);
+
+      if (state === currentState) {
+        return watchState(channelRef);
+      }
+    };
+
+    const watchers = this.channelRefs.map(watchState);
+    Promise.race(watchers).then(() => callback(), callback);
   }
 
   /**

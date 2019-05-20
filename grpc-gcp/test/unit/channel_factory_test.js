@@ -147,10 +147,46 @@ describe('grpc-gcp channel factory tests', function() {
     afterEach(function() {
       channel.close();
     });
-    it('should throw unimplemented error', function() {
-      assert.throws(() => {
-        channel.watchConnectivityState();
+    it('should throw an error if no channels are available', function(done) {
+      channel.channelRefs = [];
+      channel.watchConnectivityState(0, new Date(), function(err) {
+        assert(err instanceof Error);
+        assert.strictEqual(
+          err.message,
+          'Cannot watch connectivity state because there are no channels.');
+        done();
       });
+    });
+    it('should resolve immediately if the state is different', function(done) {
+      var fakeState = grpc.connectivityState.READY;
+      channel.getConnectivityState = function() {
+        return grpc.connectivityState.IDLE;
+      };
+      channel.watchConnectivityState(fakeState, 1000, function(err) {
+        assert.ifError(err);
+        done();
+      });
+    });
+    it('should call channel.watchConnectivityState', function(done) {
+      var fakeState = grpc.connectivityState.READY;
+      channel.getConnectivityState = function() {
+        return fakeState;
+      };
+      channel.channelRefs.forEach(channelRef => {
+        channelRef.channel.getConnectivityState = function(connect) {
+          assert.strictEqual(connect, false);
+          return fakeState;
+        };
+        channelRef.channel.watchConnectivityState = function(s, d, cb) {
+          assert.strictEqual(s, fakeState);
+          assert.strictEqual(d, 1000);
+          channel.getConnectivityState = function() {
+            return grpc.connectivityState.IDLE;
+          };
+          setImmediate(cb);
+        };
+      });
+      channel.watchConnectivityState(fakeState, 1000, done);
     });
   });
   describe('createCall', function() {
