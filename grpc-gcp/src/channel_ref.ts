@@ -16,14 +16,14 @@
  *
  */
 
-import {Channel} from 'grpc';
+import * as grpc from '@grpc/grpc-js';
 
 /**
  * A wrapper of real grpc channel. Also provides helper functions to
  * calculate affinity counts and active streams count.
  */
 export class ChannelRef {
-  private readonly channel: Channel;
+  private readonly channel: grpc.ChannelInterface;
   private readonly channelId: number;
   private affinityCount: number;
   private activeStreamsCount: number;
@@ -35,7 +35,7 @@ export class ChannelRef {
    * @param activeStreamsCount Initial streams count.
    */
   constructor(
-    channel: Channel,
+    channel: grpc.ChannelInterface,
     channelId: number,
     affinityCount?: number,
     activeStreamsCount?: number
