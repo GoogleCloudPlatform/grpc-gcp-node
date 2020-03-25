@@ -17,7 +17,6 @@
  */
 
 import * as grpcType from '@grpc/grpc-js';
-import {ChannelInterface} from '@grpc/grpc-js';
 import {promisify} from 'util';
 
 import {ChannelRef} from './channel_ref';
