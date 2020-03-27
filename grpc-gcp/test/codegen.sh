@@ -9,6 +9,6 @@ for p in $(find ../../third_party/googleapis/google -type f -name *.proto); do
   $PROTOC \
     --proto_path=../../third_party/googleapis \
     --js_out=import_style=commonjs,binary:./ \
-    --grpc_out=./ \
+    --grpc_out=generate_package_definition:./ \
     "$p"
 done

@@ -85,6 +85,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           }
           port = boundPort;
           server.start();
+          done();
         });
       });
       after(function() {
@@ -196,8 +197,8 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         });
         describe('Call argument handling', function() {
           describe('Unary call', function() {
-            it('Should handle undefined options', function(done) {
-              var call = client.unary({}, metadata, undefined, function(err, data) {
+            it('Should handle missing options', function(done) {
+              var call = client.unary({}, metadata, function(err, data) {
                 assert.ifError(err);
               });
               call.on('metadata', function(metadata) {
@@ -205,19 +206,11 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
                 done();
               });
             });
-            it('Should handle two undefined arguments', function(done) {
-              var call = client.unary({}, undefined, undefined, function(
+            it('Should handle missing metadata and options', function(done) {
+              var call = client.unary({}, function(
                 err,
                 data
               ) {
-                assert.ifError(err);
-              });
-              call.on('metadata', function(metadata) {
-                done();
-              });
-            });
-            it('Should handle one undefined argument', function(done) {
-              var call = client.unary({}, undefined, function(err, data) {
                 assert.ifError(err);
               });
               call.on('metadata', function(metadata) {
@@ -226,8 +219,8 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             });
           });
           describe('Client stream call', function() {
-            it('Should handle undefined options', function(done) {
-              var call = client.clientStream(metadata, undefined, function(
+            it('Should handle missing options', function(done) {
+              var call = client.clientStream(metadata, function(
                 err,
                 data
               ) {
@@ -239,20 +232,11 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
               });
               call.end();
             });
-            it('Should handle two undefined arguments', function(done) {
-              var call = client.clientStream(undefined, undefined, function(
+            it('Should handle missing metadata and options', function(done) {
+              var call = client.clientStream(function(
                 err,
                 data
               ) {
-                assert.ifError(err);
-              });
-              call.on('metadata', function(metadata) {
-                done();
-              });
-              call.end();
-            });
-            it('Should handle one undefined argument', function(done) {
-              var call = client.clientStream(undefined, function(err, data) {
                 assert.ifError(err);
               });
               call.on('metadata', function(metadata) {
@@ -262,23 +246,16 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             });
           });
           describe('Server stream call', function() {
-            it('Should handle undefined options', function(done) {
-              var call = client.serverStream({}, metadata, undefined);
+            it('Should handle missing options', function(done) {
+              var call = client.serverStream({}, metadata);
               call.on('data', function() {});
               call.on('metadata', function(metadata) {
                 assert.deepStrictEqual(metadata.get('key'), ['value']);
                 done();
               });
             });
-            it('Should handle two undefined arguments', function(done) {
-              var call = client.serverStream({}, undefined, undefined);
-              call.on('data', function() {});
-              call.on('metadata', function(metadata) {
-                done();
-              });
-            });
-            it('Should handle one undefined argument', function(done) {
-              var call = client.serverStream({}, undefined);
+            it('Should handle missing metadata and options', function(done) {
+              var call = client.serverStream({});
               call.on('data', function() {});
               call.on('metadata', function(metadata) {
                 done();
@@ -286,8 +263,8 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             });
           });
           describe('Bidi stream call', function() {
-            it('Should handle undefined options', function(done) {
-              var call = client.bidiStream(metadata, undefined);
+            it('Should handle missing options', function(done) {
+              var call = client.bidiStream(metadata);
               call.on('data', function() {});
               call.on('metadata', function(metadata) {
                 assert.deepStrictEqual(metadata.get('key'), ['value']);
@@ -295,16 +272,8 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
               });
               call.end();
             });
-            it('Should handle two undefined arguments', function(done) {
-              var call = client.bidiStream(undefined, undefined);
-              call.on('data', function() {});
-              call.on('metadata', function(metadata) {
-                done();
-              });
-              call.end();
-            });
-            it('Should handle one undefined argument', function(done) {
-              var call = client.bidiStream(undefined);
+            it('Should handle missing metadata and options', function(done) {
+              var call = client.bidiStream();
               call.on('data', function() {});
               call.on('metadata', function(metadata) {
                 done();
