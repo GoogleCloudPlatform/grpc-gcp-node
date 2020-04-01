@@ -34,9 +34,10 @@
   "engines": {
     "node": ">=6"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@grpc/grpc-js": "^0.7.3"
+  },
   "devDependencies": {
-    "@grpc/grpc-js": "^0.7.3",
     "@grpc/proto-loader": "0.4.0",
     "eslint": "5.15.3",
     "eslint-config-prettier": "4.1.0",
