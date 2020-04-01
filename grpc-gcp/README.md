@@ -49,7 +49,9 @@ First, Create a json file defining API configuration, with ChannelPoolConfig and
 Load configuration to ApiConfig.
 
 ```javascript
-var grpcGcp = require('grpc-gcp');
+// @grpc/grpc-js can be used in place of grpc with no changes
+var grpc = require('grpc');
+var grpcGcp = require('grpc-gcp')(grpc);
 var fs = require('fs');
 
 var apiDefinition = JSON.parse(fs.readFileSync('your_api_config_json_file'));
