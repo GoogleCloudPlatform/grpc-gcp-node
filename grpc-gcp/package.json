@@ -1,6 +1,6 @@
 {
   "name": "grpc-gcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "build/src/index.js",
   "scripts": {
@@ -35,8 +35,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "grpc": "^1.16.0",
-    "protobufjs": "^6.8.8"
+    "@grpc/grpc-js": "^0.7.3"
   },
   "devDependencies": {
     "@grpc/proto-loader": "0.4.0",
@@ -45,9 +44,10 @@
     "eslint-plugin-node": "8.0.0",
     "eslint-plugin-prettier": "3.0.0",
     "google-auth-library": "3.1.1",
-    "google-gax": "0.25.5",
+    "google-gax": "^1.15.1",
     "google-protobuf": "3.7.0",
-    "grpc-tools": "1.7.1",
+    "grpc": "^1.24.2",
+    "grpc-tools": "^1.8.1",
     "gts": "0.9.0",
     "mocha": "6.0.2",
     "nyc": "13.3.0",
