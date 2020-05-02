@@ -6,7 +6,7 @@
   "scripts": {
     "build": "./codegen.sh && tsc && cp -r src/generated build/src/",
     "test-codegen": "./test/codegen.sh",
-    "system-tests": "mocha test/integration/*.js --reporter spec --timeout 10000",
+    "system-test": "mocha test/integration/*.js --reporter spec --timeout 10000",
     "test": "mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
     "check": "gts check",
