@@ -6,15 +6,14 @@
   "scripts": {
     "build": "./codegen.sh && tsc && cp -r src/generated build/src/",
     "test-codegen": "./test/codegen.sh",
-    "integration-tests": "mocha test/integration/*.js --reporter spec --timeout 10000",
-    "unit-tests": "mocha test/unit/*.js --reporter spec",
+    "system-tests": "mocha test/integration/*.js --reporter spec --timeout 10000",
+    "test": "mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
     "check": "gts check",
     "fix": "gts fix",
     "prepare": "npm run build",
     "prettier": "prettier --write src/*.ts test/**/*.js",
-    "coverage": "nyc ./node_modules/.bin/_mocha test/unit test/integration --reporter spec --timeout 600000",
-    "test": "npm run unit-tests"
+    "coverage": "nyc ./node_modules/.bin/_mocha test/unit test/integration --reporter spec --timeout 600000"
   },
   "repository": {
     "type": "git",
