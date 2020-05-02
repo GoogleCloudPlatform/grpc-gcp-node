@@ -6,10 +6,11 @@
   "scripts": {
     "build": "./codegen.sh && tsc && cp -r src/generated build/src/",
     "test-codegen": "./test/codegen.sh",
+    "presystem-test": "npm run test-codegen",
     "system-test": "mocha test/integration/*.js --reporter spec --timeout 10000",
     "test": "mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
-    "check": "gts check",
+    "lint": "gts check",
     "fix": "gts fix",
     "prepare": "npm run build",
     "prettier": "prettier --write src/*.ts test/**/*.js",

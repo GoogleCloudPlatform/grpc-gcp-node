@@ -32,6 +32,7 @@ if [ -f .kokoro/pre-system-test.sh ]; then
     set -x
 fi
 
+git submodule update --init --recursive
 npm install
 
 # If tests are running against master, configure Build Cop
