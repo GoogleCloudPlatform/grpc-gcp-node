@@ -42,4 +42,3 @@ jobs:
         working-directory: ./grpc-gcp
       - run: npm run lint
         working-directory: ./grpc-gcp
-
