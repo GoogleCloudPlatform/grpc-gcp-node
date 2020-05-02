@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [10, 12, 14]
+        node: [10]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 10
       - run: npm install
         working-directory: ./grpc-gcp
       - run: npm test
