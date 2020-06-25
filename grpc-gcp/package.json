@@ -35,7 +35,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.0.3"
+    "@grpc/grpc-js": "^1.1.1"
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.5.4",
