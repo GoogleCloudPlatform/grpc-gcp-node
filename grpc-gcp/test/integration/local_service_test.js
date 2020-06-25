@@ -188,10 +188,12 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
           call.on('metadata', function(resp_metadata) {
             // Two arrays are equal iff their symmetric difference is empty
-            assert.deepStrictEqual(
-              _.xor(dup_metadata.get('key'), resp_metadata.get('key')),
-              []
-            );
+            var actual_values = resp_metadata.get('key');
+            if (actual_values.length == 1) {
+              assert.deepStrictEqual(actual_values, ['value, value2']);
+            } else {
+              assert.deepStrictEqual(actual_values, ['value', 'value2']);
+            }
             done();
           });
         });
