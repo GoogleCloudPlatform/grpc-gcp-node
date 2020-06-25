@@ -4,9 +4,8 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "build/src/index.js",
   "scripts": {
-    "build": "./codegen.sh && tsc && cp -r src/generated build/src/",
-    "test-codegen": "./test/codegen.sh",
-    "presystem-test": "npm run test-codegen",
+    "build": "node codegen.js && tsc && shx cp -r src/generated build/src/",
+    "presystem-test": "node test/codegen.js",
     "system-test": "c8 mocha test/integration/*.js --reporter spec --timeout 10000",
     "test": "c8 mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
@@ -36,7 +35,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@grpc/grpc-js": "~1.0.2"
+    "@grpc/grpc-js": "^1.0.3"
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.5.4",
@@ -53,6 +52,7 @@
     "gts": "^0.9.0",
     "mocha": "^7.1.1",
     "prettier": "^2.0.5",
+    "shx": "^0.3.2",
     "typescript": "~3.8.3"
   },
   "files": [
