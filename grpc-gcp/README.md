@@ -96,10 +96,6 @@ cd grpc-gcp
 npm install
 ```
 
-```sh
-npm run build
-```
-
 ## Test
 
 Setup credentials. See [Getting Started With Authentication](https://cloud.google.com/docs/authentication/getting-started) for more details.

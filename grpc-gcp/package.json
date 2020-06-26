@@ -4,8 +4,7 @@
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "build/src/index.js",
   "scripts": {
-    "build": "node codegen.js && tsc && shx cp -r src/generated build/src/",
-    "presystem-test": "node test/codegen.js",
+    "build": "tsc && cp -r src/generated build/src/",
     "system-test": "c8 mocha test/integration/*.js --reporter spec --timeout 10000",
     "test": "c8 mocha test/unit/*.js --reporter spec",
     "eslint": "./node_modules/.bin/eslint test/integration",
@@ -46,13 +45,12 @@
     "eslint-plugin-prettier": "^3.1.3",
     "google-auth-library": "^6.0.0",
     "google-gax": "^2.3.0",
-    "google-protobuf": "^3.11.4",
+    "google-protobuf": "^3.12.2",
     "grpc": "^1.24.2",
     "grpc-tools": "^1.8.1",
     "gts": "^0.9.0",
     "mocha": "^7.1.1",
     "prettier": "^2.0.5",
-    "shx": "^0.3.2",
     "typescript": "~3.8.3"
   },
   "files": [
