@@ -86,14 +86,14 @@ git clone https://github.com/GoogleCloudPlatform/grpc-gcp-node.git && cd grpc-gc
 git submodule update --init --recursive
 ```
 
-Install dependencies and build from source.
+Build grpc-gcp.
 
 ```sh
-npm install
+cd grpc-gcp
 ```
 
 ```sh
-npm run build
+npm install
 ```
 
 ## Test
@@ -107,15 +107,11 @@ export GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json
 Run unit tests.
 
 ```sh
-npm run unit-tests
+npm test
 ```
 
-Run integration tests.
+Run system tests.
 
 ```sh
-npm run test-codegen
-```
-
-```sh
-npm run integration-tests
+npm run system-test
 ```

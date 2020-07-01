@@ -10,4 +10,3 @@ coverage
 # generated code
 grpc-gcp/test/google
 cloudprober/google
-grpc-gcp/src/generated
