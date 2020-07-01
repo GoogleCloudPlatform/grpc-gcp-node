@@ -39,7 +39,7 @@ const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 const getGrpcGcpObjects = require('../../build/src');
 
 for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
-  describe('Using ' + grpcLibName, function () {
+  describe('Using ' + grpcLibName, () => {
     const grpc = require(grpcLibName);
     const grpcGcp = getGrpcGcpObjects(grpc);
     describe('Spanner integration tests', () => {
@@ -53,25 +53,25 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         let client;
         let pool;
 
-        beforeEach((done) => {
-          var authFactory = new GoogleAuth();
+        beforeEach(done => {
+          const authFactory = new GoogleAuth();
           authFactory.getApplicationDefault((err, auth) => {
             assert.ifError(err);
 
-            var scopes = [_OAUTH_SCOPE];
+            const scopes = [_OAUTH_SCOPE];
             auth = auth.createScoped(scopes);
 
-            var sslCreds = grpc.credentials.createSsl();
-            var callCreds = grpc.credentials.createFromGoogleCredential(auth);
-            var channelCreds = grpc.credentials.combineChannelCredentials(
+            const sslCreds = grpc.credentials.createSsl();
+            const callCreds = grpc.credentials.createFromGoogleCredential(auth);
+            const channelCreds = grpc.credentials.combineChannelCredentials(
               sslCreds,
               callCreds
             );
 
-            var apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
-            var apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
+            const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
+            const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
 
-            var channelOptions = {
+            const channelOptions = {
               channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
               callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
               gcpApiConfig: apiConfig,
@@ -89,26 +89,26 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test session operations', (done) => {
-          var createSessionRequest = {database: _DATABASE};
+        it('Test session operations', done => {
+          const createSessionRequest = {database: _DATABASE};
           client.createSession(createSessionRequest, (err, session) => {
             assert.ifError(err);
-            var sessionName = session.name;
+            const sessionName = session.name;
 
-            var getSessionRequest = {name: sessionName};
+            const getSessionRequest = {name: sessionName};
             client.getSession(getSessionRequest, (err, sessionResult) => {
               assert.ifError(err);
               assert.strictEqual(sessionResult.name, sessionName);
 
-              var listSessionsRequest = {database: _DATABASE};
+              const listSessionsRequest = {database: _DATABASE};
               client.listSessions(listSessionsRequest, (err, response) => {
                 assert.ifError(err);
-                var sessionsList = response.sessions;
-                var sessionNames = sessionsList.map((session) => session.name);
+                const sessionsList = response.sessions;
+                const sessionNames = sessionsList.map(session => session.name);
                 assert(sessionNames.includes(sessionName));
 
-                var deleteSessionRequest = {name: sessionName};
-                client.deleteSession(deleteSessionRequest, (err) => {
+                const deleteSessionRequest = {name: sessionName};
+                client.deleteSession(deleteSessionRequest, err => {
                   assert.ifError(err);
                   done();
                 });
@@ -117,33 +117,33 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test executeSql', (done) => {
-          var createSessionRequest = {database: _DATABASE};
+        it('Test executeSql', done => {
+          const createSessionRequest = {database: _DATABASE};
           client.createSession(createSessionRequest, (err, session) => {
             assert.ifError(err);
-            var sessionName = session.name;
+            const sessionName = session.name;
 
             assert.strictEqual(pool.channelRefs.length, 1);
             assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
             assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
-            var executeSqlRequest = {
+            const executeSqlRequest = {
               session: sessionName,
               sql: _TEST_SQL,
             };
             client.executeSql(executeSqlRequest, (err, resultSet) => {
               assert.ifError(err);
               assert.notStrictEqual(resultSet, null);
-              var rowsList = resultSet.rows;
-              var value = rowsList[0].values[0].stringValue;
+              const rowsList = resultSet.rows;
+              const value = rowsList[0].values[0].stringValue;
 
               assert.strictEqual(value, 'payload');
               assert.strictEqual(pool.channelRefs.length, 1);
               assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
               assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
-              var deleteSessionRequest = {name: sessionName};
-              client.deleteSession(deleteSessionRequest, (err) => {
+              const deleteSessionRequest = {name: sessionName};
+              client.deleteSession(deleteSessionRequest, err => {
                 assert.ifError(err);
                 assert.strictEqual(pool.channelRefs.length, 1);
                 assert.strictEqual(pool.channelRefs[0].affinityCount, 0);
@@ -154,41 +154,41 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test executeStreamingSql', (done) => {
-          var createSessionRequest = {database: _DATABASE};
+        it('Test executeStreamingSql', done => {
+          const createSessionRequest = {database: _DATABASE};
           client.createSession(createSessionRequest, (err, session) => {
             assert.ifError(err);
-            var sessionName = session.name;
+            const sessionName = session.name;
 
             assert.strictEqual(pool.channelRefs.length, 1);
             assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
             assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
-            var executeSqlRequest = {
+            const executeSqlRequest = {
               session: sessionName,
               sql: _TEST_SQL,
             };
-            var call = client.executeStreamingSql(executeSqlRequest);
+            const call = client.executeStreamingSql(executeSqlRequest);
 
             assert.strictEqual(pool.channelRefs.length, 1);
             assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
             assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 1);
 
-            call.on('data', (partialResultSet) => {
-              var value = partialResultSet.values[0].stringValue;
+            call.on('data', partialResultSet => {
+              const value = partialResultSet.values[0].stringValue;
               assert.strictEqual(value, 'payload');
             });
 
-            call.on('status', (status) => {
+            call.on('status', status => {
               assert.strictEqual(status.code, grpc.status.OK);
               assert.strictEqual(pool.channelRefs.length, 1);
               assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
               assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
             });
 
-            call.on('end', function () {
-              var deleteSessionRequest = {name: sessionName};
-              client.deleteSession(deleteSessionRequest, (err) => {
+            call.on('end', () => {
+              const deleteSessionRequest = {name: sessionName};
+              client.deleteSession(deleteSessionRequest, err => {
                 assert.ifError(err);
                 assert.strictEqual(pool.channelRefs.length, 1);
                 assert.strictEqual(pool.channelRefs[0].affinityCount, 0);
@@ -199,26 +199,26 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test concurrent streams watermark', (done) => {
-          var watermark = 5;
+        it('Test concurrent streams watermark', done => {
+          const watermark = 5;
           pool.maxConcurrentStreamsLowWatermark = watermark;
 
-          var expectedNumChannels = 3;
+          const expectedNumChannels = 3;
 
-          var createCallPromises = [];
+          const createCallPromises = [];
 
           for (let i = 0; i < watermark * expectedNumChannels; i++) {
-            var promise = new Promise((resolve, reject) => {
-              var createSessionRequest = {database: _DATABASE};
+            const promise = new Promise((resolve, reject) => {
+              const createSessionRequest = {database: _DATABASE};
               client.createSession(createSessionRequest, (err, session) => {
                 if (err) {
                   reject(err);
                 } else {
-                  var executeSqlRequest = {
+                  const executeSqlRequest = {
                     session: session.name,
                     sql: _TEST_SQL,
                   };
-                  var call = client.executeStreamingSql(executeSqlRequest);
+                  const call = client.executeStreamingSql(executeSqlRequest);
 
                   resolve({
                     call: call,
@@ -232,7 +232,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
 
           Promise.all(createCallPromises)
             .then(
-              (results) => {
+              results => {
                 assert.strictEqual(
                   pool.channelRefs.length,
                   expectedNumChannels
@@ -247,16 +247,16 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
                 );
 
                 // Consume streaming calls.
-                var emitterPromises = results.map(
-                  (result) =>
-                    new Promise((resolve) => {
-                      result.call.on('data', (partialResultSet) => {
-                        var value = partialResultSet.values[0].stringValue;
+                const emitterPromises = results.map(
+                  result =>
+                    new Promise(resolve => {
+                      result.call.on('data', partialResultSet => {
+                        const value = partialResultSet.values[0].stringValue;
                         assert.strictEqual(value, 'payload');
                       });
                       result.call.on('end', () => {
-                        var deleteSessionRequest = {name: result.sessionName};
-                        client.deleteSession(deleteSessionRequest, (err) => {
+                        const deleteSessionRequest = {name: result.sessionName};
+                        client.deleteSession(deleteSessionRequest, err => {
                           assert.ifError(err);
                           resolve();
                         });
@@ -267,7 +267,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
                 // Make sure all sessions get cleaned.
                 return Promise.all(emitterPromises);
               },
-              (error) => {
+              error => {
                 done(error);
               }
             )
@@ -281,15 +281,15 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
                 assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
                 done();
               },
-              (error) => {
+              error => {
                 done(error);
               }
             );
         });
 
-        it('Test invalid BOUND affinity', (done) => {
-          var getSessionRequest = {name: 'wrong_name'};
-          client.getSession(getSessionRequest, (err) => {
+        it('Test invalid BOUND affinity', done => {
+          const getSessionRequest = {name: 'wrong_name'};
+          client.getSession(getSessionRequest, err => {
             assert(err);
             assert.strictEqual(
               err.message,
@@ -299,9 +299,9 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test invalid UNBIND affinity', (done) => {
-          var deleteSessionRequest = {name: 'wrong_name'};
-          client.deleteSession(deleteSessionRequest, (err) => {
+        it('Test invalid UNBIND affinity', done => {
+          const deleteSessionRequest = {name: 'wrong_name'};
+          client.deleteSession(deleteSessionRequest, err => {
             assert(err);
             assert.strictEqual(
               err.message,
@@ -323,25 +323,25 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         let client;
         let pool;
 
-        beforeEach((done) => {
-          var authFactory = new GoogleAuth();
+        beforeEach(done => {
+          const authFactory = new GoogleAuth();
           authFactory.getApplicationDefault((err, auth) => {
             assert.ifError(err);
 
-            var scopes = [_OAUTH_SCOPE];
+            const scopes = [_OAUTH_SCOPE];
             auth = auth.createScoped(scopes);
 
-            var sslCreds = grpc.credentials.createSsl();
-            var callCreds = grpc.credentials.createFromGoogleCredential(auth);
-            var channelCreds = grpc.credentials.combineChannelCredentials(
+            const sslCreds = grpc.credentials.createSsl();
+            const callCreds = grpc.credentials.createFromGoogleCredential(auth);
+            const channelCreds = grpc.credentials.combineChannelCredentials(
               sslCreds,
               callCreds
             );
 
-            var apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
-            var apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
+            const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
+            const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
 
-            var channelOptions = {
+            const channelOptions = {
               channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
               callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
               gcpApiConfig: apiConfig,
@@ -355,10 +355,10 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test session operations', (done) => {
+        it('Test session operations', done => {
           client.createSession({database: _DATABASE}, (err, session) => {
             assert.ifError(err);
-            var sessionName = session.name;
+            const sessionName = session.name;
 
             client.getSession({name: sessionName}, (err, sessionResult) => {
               assert.ifError(err);
@@ -366,11 +366,11 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
 
               client.listSessions({database: _DATABASE}, (err, response) => {
                 assert.ifError(err);
-                var sessionsList = response.sessions;
-                var sessionNames = sessionsList.map((session) => session.name);
+                const sessionsList = response.sessions;
+                const sessionNames = sessionsList.map(session => session.name);
                 assert(sessionNames.includes(sessionName));
 
-                client.deleteSession({name: sessionName}, (err) => {
+                client.deleteSession({name: sessionName}, err => {
                   assert.ifError(err);
                   done();
                 });
@@ -379,32 +379,32 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test executeSql', (done) => {
+        it('Test executeSql', done => {
           client.createSession({database: _DATABASE}, (err, session) => {
             assert.ifError(err);
-            var sessionName = session.name;
+            const sessionName = session.name;
 
             assert.strictEqual(pool.channelRefs.length, 1);
             assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
             assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
-            var executeSqlRequest = {
+            const executeSqlRequest = {
               session: sessionName,
               sql: _TEST_SQL,
             };
             client.executeSql(executeSqlRequest, (err, resultSet) => {
               assert.ifError(err);
               assert.notStrictEqual(resultSet, null);
-              var rowsList = resultSet.rows;
-              var value = rowsList[0].values[0].stringValue;
+              const rowsList = resultSet.rows;
+              const value = rowsList[0].values[0].stringValue;
 
               assert.strictEqual(value, 'payload');
               assert.strictEqual(pool.channelRefs.length, 1);
               assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
               assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
-              var deleteSessionRequest = {name: sessionName};
-              client.deleteSession(deleteSessionRequest, (err) => {
+              const deleteSessionRequest = {name: sessionName};
+              client.deleteSession(deleteSessionRequest, err => {
                 assert.ifError(err);
                 assert.strictEqual(pool.channelRefs.length, 1);
                 assert.strictEqual(pool.channelRefs[0].affinityCount, 0);
@@ -415,39 +415,39 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           });
         });
 
-        it('Test executeStreamingSql', (done) => {
+        it('Test executeStreamingSql', done => {
           client.createSession({database: _DATABASE}, (err, session) => {
             assert.ifError(err);
-            var sessionName = session.name;
+            const sessionName = session.name;
 
             assert.strictEqual(pool.channelRefs.length, 1);
             assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
             assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
 
-            var executeSqlRequest = {
+            const executeSqlRequest = {
               session: sessionName,
               sql: _TEST_SQL,
             };
-            var call = client.executeStreamingSql(executeSqlRequest);
+            const call = client.executeStreamingSql(executeSqlRequest);
 
             assert.strictEqual(pool.channelRefs.length, 1);
             assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
             assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 1);
 
-            call.on('data', (partialResultSet) => {
-              var value = partialResultSet.values[0].stringValue;
+            call.on('data', partialResultSet => {
+              const value = partialResultSet.values[0].stringValue;
               assert.strictEqual(value, 'payload');
             });
 
-            call.on('status', (status) => {
+            call.on('status', status => {
               assert.strictEqual(status.code, grpc.status.OK);
               assert.strictEqual(pool.channelRefs.length, 1);
               assert.strictEqual(pool.channelRefs[0].affinityCount, 1);
               assert.strictEqual(pool.channelRefs[0].activeStreamsCount, 0);
             });
 
-            call.on('end', function () {
-              client.deleteSession({name: sessionName}, (err) => {
+            call.on('end', () => {
+              client.deleteSession({name: sessionName}, err => {
                 assert.ifError(err);
                 assert.strictEqual(pool.channelRefs.length, 1);
                 assert.strictEqual(pool.channelRefs[0].affinityCount, 0);

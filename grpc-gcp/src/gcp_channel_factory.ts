@@ -37,13 +37,17 @@ export interface GcpChannelFactoryInterface extends grpcType.ChannelInterface {
 }
 
 export interface GcpChannelFactoryConstructor {
-  new(address: string, credentials: grpcType.ChannelCredentials,
-      // tslint:disable-next-line:no-any options can be any object
-      options: any): GcpChannelFactoryInterface;
+  new (
+    address: string,
+    credentials: grpcType.ChannelCredentials,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    options: any
+  ): GcpChannelFactoryInterface;
 }
 
-export function getGcpChannelFactoryClass(grpc: GrpcModule):
-    GcpChannelFactoryConstructor {
+export function getGcpChannelFactoryClass(
+  grpc: GrpcModule
+): GcpChannelFactoryConstructor {
   /**
    * A channel management factory that implements grpc.Channel APIs.
    */
@@ -63,15 +67,18 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
      * @param options A map of channel options.
      */
     constructor(
-        address: string, credentials: grpcType.ChannelCredentials,
-        // tslint:disable-next-line:no-any options can be any object
-        options: any) {
+      address: string,
+      credentials: grpcType.ChannelCredentials,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      options: any
+    ) {
       if (!options) {
         options = {};
       }
       if (typeof options !== 'object') {
         throw new TypeError(
-            'Channel options must be an object with string keys and integer or string values');
+          'Channel options must be an object with string keys and integer or string values'
+        );
       }
       this.maxSize = 10;
       this.maxConcurrentStreamsLowWatermark = 100;
@@ -82,7 +89,7 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
           if (channelPool.maxSize) this.maxSize = channelPool.maxSize;
           if (channelPool.maxConcurrentStreamsLowWatermark) {
             this.maxConcurrentStreamsLowWatermark =
-                channelPool.maxConcurrentStreamsLowWatermark;
+              channelPool.maxConcurrentStreamsLowWatermark;
           }
         }
         this.initMethodToAffinityMap(gcpApiConfig);
@@ -132,19 +139,26 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
 
       const size = this.channelRefs.length;
       // Chose the channelRef that has the least busy channel.
-      if (size > 0 &&
-          this.channelRefs[0].getActiveStreamsCount() <
-              this.maxConcurrentStreamsLowWatermark) {
+      if (
+        size > 0 &&
+        this.channelRefs[0].getActiveStreamsCount() <
+          this.maxConcurrentStreamsLowWatermark
+      ) {
         return this.channelRefs[0];
       }
 
       // If all existing channels are busy, and channel pool still has capacity,
       // create a new channel in the pool.
       if (size < this.maxSize) {
-        const channelOptions =
-            Object.assign({[CLIENT_CHANNEL_ID]: size}, this.options);
-        const grpcChannel =
-            new grpc.Channel(this.target, this.credentials, channelOptions);
+        const channelOptions = Object.assign(
+          {[CLIENT_CHANNEL_ID]: size},
+          this.options
+        );
+        const grpcChannel = new grpc.Channel(
+          this.target,
+          this.credentials,
+          channelOptions
+        );
         const channelRef = new ChannelRef(grpcChannel, size);
         this.channelRefs.push(channelRef);
         return channelRef;
@@ -254,7 +268,8 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
       }
 
       throw new Error(
-          'Cannot get connectivity state because no channel provides valid state.');
+        'Cannot get connectivity state because no channel provides valid state.'
+      );
     }
 
     /**
@@ -267,11 +282,16 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
      *     error if the deadline passes without a state change
      */
     watchConnectivityState(
-        currentState: grpcType.connectivityState, deadline: grpcType.Deadline,
-        callback: (error?: Error) => void): void {
+      currentState: grpcType.connectivityState,
+      deadline: grpcType.Deadline,
+      callback: (error?: Error) => void
+    ): void {
       if (!this.channelRefs.length) {
-        callback(new Error(
-            'Cannot watch connectivity state because there are no channels.'));
+        callback(
+          new Error(
+            'Cannot watch connectivity state because there are no channels.'
+          )
+        );
         return;
       }
 
@@ -282,12 +302,15 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
         return;
       }
 
-      const watchState = async(channelRef: ChannelRef): Promise<void> => {
+      const watchState = async (channelRef: ChannelRef): Promise<void> => {
         const channel = channelRef.getChannel();
         const startingState = channel.getConnectivityState(false);
 
-        await promisify(channel.watchConnectivityState)
-            .call(channel, startingState, deadline);
+        await promisify(channel.watchConnectivityState).call(
+          channel,
+          startingState,
+          deadline
+        );
 
         const state = this.getConnectivityState(false);
 
@@ -314,12 +337,21 @@ export function getGcpChannelFactoryClass(grpc: GrpcModule):
      * @return a grpc call object.
      */
     createCall(
-        method: string, deadline: grpcType.Deadline, host: string|null,
-        // tslint:disable-next-line:no-any There isn't a good type to use here
-        parentCall: any, propagateFlags: number|null) {
+      method: string,
+      deadline: grpcType.Deadline,
+      host: string | null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parentCall: any,
+      propagateFlags: number | null
+    ) {
       const grpcChannel = this.getChannelRef().getChannel();
       return grpcChannel.createCall(
-          method, deadline, host, parentCall, propagateFlags);
+        method,
+        deadline,
+        host,
+        parentCall,
+        propagateFlags
+      );
     }
   };
 }
