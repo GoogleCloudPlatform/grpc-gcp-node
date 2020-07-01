@@ -19,7 +19,10 @@ import * as grpcType from '@grpc/grpc-js';
 import * as util from 'util';
 
 import {ChannelRef} from './channel_ref';
-import {GcpChannelFactoryInterface, getGcpChannelFactoryClass} from './gcp_channel_factory';
+import {
+  GcpChannelFactoryInterface,
+  getGcpChannelFactoryClass,
+} from './gcp_channel_factory';
 import * as protoRoot from './generated/grpc_gcp';
 
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
@@ -28,7 +31,6 @@ import AffinityConfig = protoRoot.grpc.gcp.AffinityConfig;
 type GrpcModule = typeof grpcType;
 
 export = (grpc: GrpcModule) => {
-  // tslint:disable-next-line:variable-name This is actually a class
   const GcpChannelFactory = getGcpChannelFactoryClass(grpc);
   /**
    * Create ApiConfig proto message from config object.
@@ -48,7 +50,10 @@ export = (grpc: GrpcModule) => {
    * @return {GcpChannelFactory} A GcpChannelFactory instance.
    */
   function gcpChannelFactoryOverride(
-      address: string, credentials: grpcType.ChannelCredentials, options: {}) {
+    address: string,
+    credentials: grpcType.ChannelCredentials,
+    options: {}
+  ) {
     return new GcpChannelFactory(address, credentials, options);
   }
 
@@ -61,8 +66,8 @@ export = (grpc: GrpcModule) => {
    * @return Modified call properties with selected grpc channel object.
    */
   function gcpCallInvocationTransformer<RequestType, ResponseType>(
-      callProperties: grpcType.CallProperties<RequestType, ResponseType>):
-      grpcType.CallProperties<RequestType, ResponseType> {
+    callProperties: grpcType.CallProperties<RequestType, ResponseType>
+  ): grpcType.CallProperties<RequestType, ResponseType> {
     const channelFactory = callProperties.channel;
     if (!channelFactory || !(channelFactory instanceof GcpChannelFactory)) {
       // The gcpCallInvocationTransformer needs to use gcp channel factory.
@@ -82,57 +87,69 @@ export = (grpc: GrpcModule) => {
 
     const boundKey = preProcessResult.boundKey;
 
-    const postProcessInterceptor =
-        (
-            // tslint:disable-next-line:no-any options can be any object
-            options: any, nextCall: Function): grpcType.InterceptingCall => {
-          // tslint:disable-next-line:no-any protobuf message
-          let firstMessage: any;
+    const postProcessInterceptor = (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      options: any,
+      nextCall: Function
+    ): grpcType.InterceptingCall => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let firstMessage: any;
 
-          const requester = {
-            start:
-                (metadata: grpcType.Metadata, listener: grpcType.Listener,
-                 next: Function): void => {
-                  const newListener = {
-                    onReceiveMetadata:
-                        (metadata: grpcType.Metadata, next: Function) => {
-                          next(metadata);
-                        },
-                    // tslint:disable-next-line:no-any protobuf message
-                    onReceiveMessage: (message: any, next: Function) => {
-                      if (!firstMessage) firstMessage = message;
-                      next(message);
-                    },
-                    onReceiveStatus:
-                        (status: grpcType.StatusObject, next: Function) => {
-                          if (status.code === grpc.status.OK) {
-                            postProcess(
-                                channelFactory, channelRef, path, boundKey,
-                                firstMessage);
-                          }
-                          next(status);
-                        },
-                  };
-                  next(metadata, newListener);
-                },
-            // tslint:disable-next-line:no-any protobuf message
-            sendMessage: (message: any, next: Function): void => {
+      const requester = {
+        start: (
+          metadata: grpcType.Metadata,
+          listener: grpcType.Listener,
+          next: Function
+        ): void => {
+          const newListener = {
+            onReceiveMetadata: (
+              metadata: grpcType.Metadata,
+              next: Function
+            ) => {
+              next(metadata);
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onReceiveMessage: (message: any, next: Function) => {
+              if (!firstMessage) firstMessage = message;
               next(message);
             },
-            halfClose: (next: Function): void => {
-              next();
-            },
-            cancel: (next: Function): void => {
-              next();
+            onReceiveStatus: (
+              status: grpcType.StatusObject,
+              next: Function
+            ) => {
+              if (status.code === grpc.status.OK) {
+                postProcess(
+                  channelFactory,
+                  channelRef,
+                  path,
+                  boundKey,
+                  firstMessage
+                );
+              }
+              next(status);
             },
           };
-          return new grpc.InterceptingCall(nextCall(options), requester);
-        };
+          next(metadata, newListener);
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sendMessage: (message: any, next: Function): void => {
+          next(message);
+        },
+        halfClose: (next: Function): void => {
+          next();
+        },
+        cancel: (next: Function): void => {
+          next();
+        },
+      };
+      return new grpc.InterceptingCall(nextCall(options), requester);
+    };
 
     // Append interceptor to existing interceptors list.
     const newCallOptions = Object.assign({}, callOptions);
-    const interceptors =
-        callOptions.interceptors ? callOptions.interceptors : [];
+    const interceptors = callOptions.interceptors
+      ? callOptions.interceptors
+      : [];
     newCallOptions.interceptors = interceptors.concat([postProcessInterceptor]);
 
     return {
@@ -155,17 +172,23 @@ export = (grpc: GrpcModule) => {
    * object.
    */
   function preProcess(
-      channelFactory: GcpChannelFactoryInterface, path: string,
-      // tslint:disable-next-line:no-any protobuf message
-      argument?: any): {boundKey: string|undefined; channelRef: ChannelRef} {
+    channelFactory: GcpChannelFactoryInterface,
+    path: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    argument?: any
+  ): {boundKey: string | undefined; channelRef: ChannelRef} {
     const affinityConfig = channelFactory.getAffinityConfig(path);
     let boundKey;
     if (argument && affinityConfig) {
       const command = affinityConfig.command;
-      if (command === AffinityConfig.Command.BOUND ||
-          command === AffinityConfig.Command.UNBIND) {
-        boundKey =
-            getAffinityKeyFromMessage(affinityConfig.affinityKey, argument);
+      if (
+        command === AffinityConfig.Command.BOUND ||
+        command === AffinityConfig.Command.UNBIND
+      ) {
+        boundKey = getAffinityKeyFromMessage(
+          affinityConfig.affinityKey,
+          argument
+        );
       }
     }
     const channelRef = channelFactory.getChannelRef(boundKey);
@@ -185,17 +208,22 @@ export = (grpc: GrpcModule) => {
    * @param responseMsg Response proto message.
    */
   function postProcess(
-      channelFactory: GcpChannelFactoryInterface, channelRef: ChannelRef,
-      path: string, boundKey?: string,
-      // tslint:disable-next-line:no-any protobuf message
-      responseMsg?: any) {
+    channelFactory: GcpChannelFactoryInterface,
+    channelRef: ChannelRef,
+    path: string,
+    boundKey?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    responseMsg?: any
+  ) {
     if (!channelFactory || !responseMsg) return;
     const affinityConfig = channelFactory.getAffinityConfig(path);
     if (affinityConfig && affinityConfig.command) {
       const command = affinityConfig.command;
       if (command === AffinityConfig.Command.BIND) {
-        const affinityKey =
-            getAffinityKeyFromMessage(affinityConfig.affinityKey, responseMsg);
+        const affinityKey = getAffinityKeyFromMessage(
+          affinityConfig.affinityKey,
+          responseMsg
+        );
         channelFactory.bind(channelRef, affinityKey);
       } else if (command === AffinityConfig.Command.UNBIND) {
         channelFactory.unbind(boundKey);
@@ -211,9 +239,10 @@ export = (grpc: GrpcModule) => {
    * @return Affinity key string.
    */
   function getAffinityKeyFromMessage(
-      affinityKeyName: string|null|undefined,
-      // tslint:disable-next-line:no-any protobuf message
-      message: any): string {
+    affinityKeyName: string | null | undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    message: any
+  ): string {
     if (affinityKeyName) {
       let currMessage = message;
       const names = affinityKeyName.split('.');
@@ -225,16 +254,19 @@ export = (grpc: GrpcModule) => {
         } else {
           // otherwise use jspb format.
           const getter =
-              'get' + names[i].charAt(0).toUpperCase() + names[i].substr(1);
+            'get' + names[i].charAt(0).toUpperCase() + names[i].substr(1);
           if (!currMessage || typeof currMessage[getter] !== 'function') break;
           currMessage = currMessage[getter]();
         }
       }
       if (i !== 0 && i === names.length) return currMessage;
     }
-    console.error(util.format(
+    console.error(
+      util.format(
         'Cannot find affinity value from proto message using affinity_key: %s.',
-        affinityKeyName));
+        affinityKeyName
+      )
+    );
     return '';
   }
 
@@ -242,6 +274,6 @@ export = (grpc: GrpcModule) => {
     createGcpApiConfig,
     gcpChannelFactoryOverride,
     gcpCallInvocationTransformer,
-    GcpChannelFactory
+    GcpChannelFactory,
   };
 };

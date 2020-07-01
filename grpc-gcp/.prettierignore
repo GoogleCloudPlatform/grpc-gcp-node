@@ -1,4 +1,5 @@
-node_modules/*
-test/google/*
-test/googleapis/*
-src/generated/*
+**/node_modules
+test/google
+test/googleapis
+src/generated
+build

@@ -35,8 +35,11 @@ export class ChannelRef {
    * @param activeStreamsCount Initial streams count.
    */
   constructor(
-      channel: grpc.ChannelInterface, channelId: number, affinityCount?: number,
-      activeStreamsCount?: number) {
+    channel: grpc.ChannelInterface,
+    channelId: number,
+    affinityCount?: number,
+    activeStreamsCount?: number
+  ) {
     this.channel = channel;
     this.channelId = channelId;
     this.affinityCount = affinityCount ? affinityCount : 0;

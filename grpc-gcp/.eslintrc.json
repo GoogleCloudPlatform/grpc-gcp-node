@@ -1,0 +1,11 @@
+{
+  "extends": "./node_modules/gts",
+  "overrides": [
+    {
+      "files": ["test/**/*.js"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
+  ]
+}

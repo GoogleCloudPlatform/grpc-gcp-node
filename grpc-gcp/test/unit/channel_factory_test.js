@@ -18,7 +18,7 @@
 
 'use strict';
 
-var assert = require('assert');
+const assert = require('assert');
 const getGrpcGcpObjects = require('../../build/src');
 
 /**
@@ -34,7 +34,7 @@ const getGrpcGcpObjects = require('../../build/src');
  *     sequence of asynchronous functions.
  */
 function multiDone(done, count) {
-  return function() {
+  return function () {
     count -= 1;
     if (count <= 0) {
       done();
@@ -43,150 +43,171 @@ function multiDone(done, count) {
 }
 
 for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
-
-  describe('Using ' + grpcLibName, function() {
+  describe('Using ' + grpcLibName, () => {
     const grpc = require(grpcLibName);
     const grpcGcp = getGrpcGcpObjects(grpc);
 
-    var insecureCreds = grpc.credentials.createInsecure();
+    const insecureCreds = grpc.credentials.createInsecure();
 
-    describe('grpc-gcp channel factory tests', function() {
-      describe('constructor', function() {
-        it('should require a string for the first argument', function() {
-          assert.doesNotThrow(function() {
+    describe('grpc-gcp channel factory tests', () => {
+      describe('constructor', () => {
+        it('should require a string for the first argument', () => {
+          assert.doesNotThrow(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds);
           });
-          assert.throws(function() {
+          assert.throws(() => {
             new grpcGcp.GcpChannelFactory();
           }, TypeError);
-          assert.throws(function() {
+          assert.throws(() => {
             new grpcGcp.GcpChannelFactory(5);
           });
         });
-        it('should require a credential for the second argument', function() {
-          assert.doesNotThrow(function() {
+        it('should require a credential for the second argument', () => {
+          assert.doesNotThrow(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds);
           });
-          assert.throws(function() {
+          assert.throws(() => {
             new grpcGcp.GcpChannelFactory('hostname', 5);
           });
-          assert.throws(function() {
+          assert.throws(() => {
             new grpcGcp.GcpChannelFactory('hostname');
           });
         });
-        it('should accept an object for the third argument', function() {
-          assert.doesNotThrow(function() {
+        it('should accept an object for the third argument', () => {
+          assert.doesNotThrow(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {});
           });
-          assert.throws(function() {
+          assert.throws(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds, 'abc');
           });
         });
-        it('should only accept objects with string or int values', function() {
-          assert.doesNotThrow(function() {
+        it('should only accept objects with string or int values', () => {
+          assert.doesNotThrow(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
               key: 'value',
             });
           });
-          assert.doesNotThrow(function() {
+          assert.doesNotThrow(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {key: 5});
           });
-          assert.throws(function() {
-            new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {key: null});
+          assert.throws(() => {
+            new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
+              key: null,
+            });
           });
-          assert.throws(function() {
+          assert.throws(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
               key: new Date(),
             });
           });
         });
-        it('should succeed without the new keyword', function() {
-          assert.doesNotThrow(function() {
-            var channel = new grpcGcp.GcpChannelFactory('hostname', insecureCreds);
+        it('should succeed without the new keyword', () => {
+          assert.doesNotThrow(() => {
+            const channel = new grpcGcp.GcpChannelFactory(
+              'hostname',
+              insecureCreds
+            );
             assert(channel instanceof grpcGcp.GcpChannelFactory);
           });
         });
       });
-      describe('close', function() {
-        var channel;
-        beforeEach(function() {
-          channel = new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {});
+      describe('close', () => {
+        let channel;
+        beforeEach(() => {
+          channel = new grpcGcp.GcpChannelFactory(
+            'hostname',
+            insecureCreds,
+            {}
+          );
         });
-        it('should succeed silently', function() {
-          assert.doesNotThrow(function() {
+        it('should succeed silently', () => {
+          assert.doesNotThrow(() => {
             channel.close();
           });
         });
-        it('should be idempotent', function() {
-          assert.doesNotThrow(function() {
+        it('should be idempotent', () => {
+          assert.doesNotThrow(() => {
             channel.close();
             channel.close();
           });
         });
       });
-      describe('getTarget', function() {
-        var channel;
-        beforeEach(function() {
-          channel = new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {});
+      describe('getTarget', () => {
+        let channel;
+        beforeEach(() => {
+          channel = new grpcGcp.GcpChannelFactory(
+            'hostname',
+            insecureCreds,
+            {}
+          );
         });
-        it('should return a string', function() {
+        it('should return a string', () => {
           assert.strictEqual(typeof channel.getTarget(), 'string');
         });
       });
-      describe('getConnectivityState', function() {
-        var channel;
-        beforeEach(function() {
-          channel = new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {});
+      describe('getConnectivityState', () => {
+        let channel;
+        beforeEach(() => {
+          channel = new grpcGcp.GcpChannelFactory(
+            'hostname',
+            insecureCreds,
+            {}
+          );
         });
-        it('should return IDLE for a new channel', function() {
+        it('should return IDLE for a new channel', () => {
           assert.strictEqual(
             channel.getConnectivityState(),
             grpc.connectivityState.IDLE
           );
         });
       });
-      describe('watchConnectivityState', function() {
-        var channel;
-        beforeEach(function() {
-          channel = new grpcGcp.GcpChannelFactory('localhost', insecureCreds, {});
+      describe('watchConnectivityState', () => {
+        let channel;
+        beforeEach(() => {
+          channel = new grpcGcp.GcpChannelFactory(
+            'localhost',
+            insecureCreds,
+            {}
+          );
         });
-        afterEach(function() {
+        afterEach(() => {
           channel.close();
         });
-        it('should throw an error if no channels are available', function(done) {
+        it('should throw an error if no channels are available', done => {
           channel.channelRefs = [];
-          channel.watchConnectivityState(0, new Date(), function(err) {
+          channel.watchConnectivityState(0, new Date(), err => {
             assert(err instanceof Error);
             assert.strictEqual(
               err.message,
-              'Cannot watch connectivity state because there are no channels.');
+              'Cannot watch connectivity state because there are no channels.'
+            );
             done();
           });
         });
-        it('should resolve immediately if the state is different', function(done) {
-          var fakeState = grpc.connectivityState.READY;
-          channel.getConnectivityState = function() {
+        it('should resolve immediately if the state is different', done => {
+          const fakeState = grpc.connectivityState.READY;
+          channel.getConnectivityState = function () {
             return grpc.connectivityState.IDLE;
           };
-          channel.watchConnectivityState(fakeState, 1000, function(err) {
+          channel.watchConnectivityState(fakeState, 1000, err => {
             assert.ifError(err);
             done();
           });
         });
-        it('should call channel.watchConnectivityState', function(done) {
-          var fakeState = grpc.connectivityState.READY;
-          channel.getConnectivityState = function() {
+        it('should call channel.watchConnectivityState', done => {
+          const fakeState = grpc.connectivityState.READY;
+          channel.getConnectivityState = function () {
             return fakeState;
           };
           channel.channelRefs.forEach(channelRef => {
-            channelRef.channel.getConnectivityState = function(connect) {
+            channelRef.channel.getConnectivityState = function (connect) {
               assert.strictEqual(connect, false);
               return fakeState;
             };
-            channelRef.channel.watchConnectivityState = function(s, d, cb) {
+            channelRef.channel.watchConnectivityState = function (s, d, cb) {
               assert.strictEqual(s, fakeState);
               assert.strictEqual(d, 1000);
-              channel.getConnectivityState = function() {
+              channel.getConnectivityState = function () {
                 return grpc.connectivityState.IDLE;
               };
               setImmediate(cb);
@@ -195,28 +216,32 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           channel.watchConnectivityState(fakeState, 1000, done);
         });
       });
-      describe('createCall', function() {
-        var channel;
-        beforeEach(function() {
-          channel = new grpcGcp.GcpChannelFactory('localhost', insecureCreds, {});
+      describe('createCall', () => {
+        let channel;
+        beforeEach(() => {
+          channel = new grpcGcp.GcpChannelFactory(
+            'localhost',
+            insecureCreds,
+            {}
+          );
         });
-        afterEach(function() {
+        afterEach(() => {
           channel.close();
         });
-        it('should return grpc.Call', function() {
-          assert.throws(function() {
+        it('should return grpc.Call', () => {
+          assert.throws(() => {
             channel.createCall();
           }, TypeError);
-          assert.throws(function() {
+          assert.throws(() => {
             channel.createCall('method');
           }, TypeError);
-          assert.doesNotThrow(function() {
+          assert.doesNotThrow(() => {
             channel.createCall('method', new Date());
           });
-          assert.doesNotThrow(function() {
+          assert.doesNotThrow(() => {
             channel.createCall('method', 0);
           });
-          assert.doesNotThrow(function() {
+          assert.doesNotThrow(() => {
             channel.createCall('method', new Date(), 'host_override');
           });
         });
