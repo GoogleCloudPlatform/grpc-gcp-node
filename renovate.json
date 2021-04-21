@@ -1,8 +1,5 @@
 {
   "extends": [
     "config:base"
-  ],
-  "includePaths": [
-    "grpc-gcp/"
   ]
 }
