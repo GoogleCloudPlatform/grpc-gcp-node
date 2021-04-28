@@ -35,7 +35,7 @@
     "@grpc/grpc-js": "^1.1.1"
   },
   "devDependencies": {
-    "@grpc/proto-loader": "0.5.6",
+    "@grpc/proto-loader": "0.6.1",
     "c8": "7.7.1",
     "google-auth-library": "6.1.6",
     "google-gax": "2.11.2",
