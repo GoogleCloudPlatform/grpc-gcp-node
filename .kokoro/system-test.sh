@@ -23,7 +23,6 @@ export GOOGLE_APPLICATION_CREDENTIALS=${KOKORO_GFILE_DIR}/service-account.json
 export GCLOUD_PROJECT=long-door-651
 
 cd $(dirname $0)/..
-cd grpc-gcp
 
 # Run a pre-test hook, if a pre-system-test.sh is in the project
 if [ -f .kokoro/pre-system-test.sh ]; then

@@ -19,7 +19,6 @@ set -eo pipefail
 export NPM_CONFIG_PREFIX=/home/node/.npm-global
 
 cd $(dirname $0)/..
-cd grpc-gcp
 
 npm install
 # If tests are running against master, configure Build Cop
