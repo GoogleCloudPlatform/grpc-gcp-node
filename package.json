@@ -7,7 +7,7 @@
     "build": "tsc && cp -r src/generated build/src/",
     "system-test": "c8 mocha test/integration/*.js --reporter spec --timeout 10000",
     "test": "c8 mocha test/unit/*.js --reporter spec",
-    "lint": "gts check",
+    "lint": "gts check src/**/*.ts",
     "fix": "gts fix",
     "prepare": "npm run build"
   },
