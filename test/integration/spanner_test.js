@@ -22,7 +22,7 @@
 
 'use strict';
 
-const PROTO_DIR = __dirname + '/../../../third_party/googleapis';
+const PROTO_DIR = __dirname + '../../third_party/googleapis';
 
 const protoLoader = require('@grpc/proto-loader');
 const assert = require('assert');
