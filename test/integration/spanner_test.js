@@ -32,7 +32,7 @@ const gax = require('google-gax');
 
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
-const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
+const _DATABASE = 'projects/long-door-651/instances/sample/databases/benchmark';
 const _TEST_SQL = 'select id from storage';
 const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
@@ -54,9 +54,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         let pool;
 
         beforeEach(async () => {
-          const authFactory = new GoogleAuth({
-            scopes: [_OAUTH_SCOPE],
-          });
+          const authFactory = new GoogleAuth();
           const auth = await authFactory.getClient();
 
           const sslCreds = grpc.credentials.createSsl();
