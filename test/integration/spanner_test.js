@@ -53,40 +53,35 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         let client;
         let pool;
 
-        beforeEach(done => {
+        beforeEach(async () => {
           const authFactory = new GoogleAuth();
-          authFactory.getApplicationDefault((err, auth) => {
-            assert.ifError(err);
-
-            const scopes = [_OAUTH_SCOPE];
-            auth = auth.createScoped(scopes);
-
-            const sslCreds = grpc.credentials.createSsl();
-            const callCreds = grpc.credentials.createFromGoogleCredential(auth);
-            const channelCreds = grpc.credentials.combineChannelCredentials(
-              sslCreds,
-              callCreds
-            );
-
-            const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
-            const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
-
-            const channelOptions = {
-              channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
-              callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
-              gcpApiConfig: apiConfig,
-            };
-
-            client = new spannerGrpc.google.spanner.v1.Spanner(
-              _TARGET,
-              channelCreds,
-              channelOptions
-            );
-
-            pool = client.getChannel();
-
-            done();
+          const auth = await authFactory.getClient({
+            scopes: [_OAUTH_SCOPE],
           });
+
+          const sslCreds = grpc.credentials.createSsl();
+          const callCreds = grpc.credentials.createFromGoogleCredential(auth);
+          const channelCreds = grpc.credentials.combineChannelCredentials(
+            sslCreds,
+            callCreds
+          );
+
+          const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
+          const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
+
+          const channelOptions = {
+            channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
+            callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
+            gcpApiConfig: apiConfig,
+          };
+
+          client = new spannerGrpc.google.spanner.v1.Spanner(
+            _TARGET,
+            channelCreds,
+            channelOptions
+          );
+
+          pool = client.getChannel();
         });
 
         it('Test session operations', done => {
