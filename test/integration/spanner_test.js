@@ -22,7 +22,7 @@
 
 'use strict';
 
-const PROTO_DIR = __dirname + '/../../../third_party/googleapis';
+const PROTO_DIR = __dirname + '/../../third_party/googleapis';
 
 const protoLoader = require('@grpc/proto-loader');
 const assert = require('assert');
@@ -32,7 +32,7 @@ const gax = require('google-gax');
 
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
-const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
+const _DATABASE = 'projects/long-door-651/instances/sample/databases/benchmark';
 const _TEST_SQL = 'select id from storage';
 const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
@@ -53,40 +53,33 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         let client;
         let pool;
 
-        beforeEach(done => {
+        beforeEach(async () => {
           const authFactory = new GoogleAuth();
-          authFactory.getApplicationDefault((err, auth) => {
-            assert.ifError(err);
+          const auth = await authFactory.getClient();
 
-            const scopes = [_OAUTH_SCOPE];
-            auth = auth.createScoped(scopes);
+          const sslCreds = grpc.credentials.createSsl();
+          const callCreds = grpc.credentials.createFromGoogleCredential(auth);
+          const channelCreds = grpc.credentials.combineChannelCredentials(
+            sslCreds,
+            callCreds
+          );
 
-            const sslCreds = grpc.credentials.createSsl();
-            const callCreds = grpc.credentials.createFromGoogleCredential(auth);
-            const channelCreds = grpc.credentials.combineChannelCredentials(
-              sslCreds,
-              callCreds
-            );
+          const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
+          const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
 
-            const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
-            const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
+          const channelOptions = {
+            channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
+            callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
+            gcpApiConfig: apiConfig,
+          };
 
-            const channelOptions = {
-              channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
-              callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
-              gcpApiConfig: apiConfig,
-            };
+          client = new spannerGrpc.google.spanner.v1.Spanner(
+            _TARGET,
+            channelCreds,
+            channelOptions
+          );
 
-            client = new spannerGrpc.google.spanner.v1.Spanner(
-              _TARGET,
-              channelCreds,
-              channelOptions
-            );
-
-            pool = client.getChannel();
-
-            done();
-          });
+          pool = client.getChannel();
         });
 
         it('Test session operations', done => {
@@ -323,36 +316,30 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         let client;
         let pool;
 
-        beforeEach(done => {
-          const authFactory = new GoogleAuth();
-          authFactory.getApplicationDefault((err, auth) => {
-            assert.ifError(err);
-
-            const scopes = [_OAUTH_SCOPE];
-            auth = auth.createScoped(scopes);
-
-            const sslCreds = grpc.credentials.createSsl();
-            const callCreds = grpc.credentials.createFromGoogleCredential(auth);
-            const channelCreds = grpc.credentials.combineChannelCredentials(
-              sslCreds,
-              callCreds
-            );
-
-            const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
-            const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
-
-            const channelOptions = {
-              channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
-              callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
-              gcpApiConfig: apiConfig,
-            };
-
-            client = new SpannerClient(_TARGET, channelCreds, channelOptions);
-
-            pool = client.getChannel();
-
-            done();
+        beforeEach(async () => {
+          const authFactory = new GoogleAuth({
+            scopes: [_OAUTH_SCOPE],
           });
+          const auth = await authFactory.getClient();
+
+          const sslCreds = grpc.credentials.createSsl();
+          const callCreds = grpc.credentials.createFromGoogleCredential(auth);
+          const channelCreds = grpc.credentials.combineChannelCredentials(
+            sslCreds,
+            callCreds
+          );
+
+          const apiDefinition = JSON.parse(fs.readFileSync(_CONFIG_FILE));
+          const apiConfig = grpcGcp.createGcpApiConfig(apiDefinition);
+
+          const channelOptions = {
+            channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
+            callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
+            gcpApiConfig: apiConfig,
+          };
+
+          client = new SpannerClient(_TARGET, channelCreds, channelOptions);
+          pool = client.getChannel();
         });
 
         it('Test session operations', done => {
