@@ -29,22 +29,36 @@ const assert = require('assert');
 const {GoogleAuth} = require('google-auth-library');
 const fs = require('fs');
 const gax = require('google-gax');
-const {exec} = require("child_process");
+const {exec} = require('child_process');
 
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const _MAX_RAND_ID = 1000000;
-const _INSTANCE_ID = 'test-instance-' + Math.floor(Math.random() * _MAX_RAND_ID);
+const _INSTANCE_ID = 'test-instance-' +
+  Math.floor(Math.random() * _MAX_RAND_ID);
 const _DATABASE_ID = 'test-db-' + Math.floor(Math.random() * _MAX_RAND_ID);
-const _DATABASE = 'projects/long-door-651/instances/' + _INSTANCE_ID + '/databases/' + _DATABASE_ID;
+const _DATABASE =
+  'projects/long-door-651/instances/' +
+  _INSTANCE_ID +
+  '/databases/' +
+  _DATABASE_ID;
 const _TEST_SQL = 'select id from storage';
 const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
 const getGrpcGcpObjects = require('../../build/src');
 
 // Create test instance
-exec('gcloud spanner instances create ' + _INSTANCE_ID + ' --config=regional-us-central1 --description="grpc-gcp-node tests" --nodes=1');
-exec('gcloud spanner databases create ' + _DATABASE_ID + ' --instance=' + _INSTANCE_ID);
+exec(
+  'gcloud spanner instances create ' +
+  _INSTANCE_ID +
+  ' --config=regional-us-central1 --description="grpc-gcp-node tests" --nodes=1'
+);
+exec(
+  'gcloud spanner databases create ' +
+  _DATABASE_ID +
+  ' --instance=' +
+  _INSTANCE_ID
+);
 
 for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
   describe('Using ' + grpcLibName, () => {
