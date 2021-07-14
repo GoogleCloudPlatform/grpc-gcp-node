@@ -35,8 +35,7 @@ const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const _MAX_RAND_ID = 1000000;
 const _INSTANCE_ID =
-  'test-instance-' +
-  Math.floor(Math.random() * _MAX_RAND_ID);
+  'test-instance-' + Math.floor(Math.random() * _MAX_RAND_ID);
 const _DATABASE_ID = 'test-db-' + Math.floor(Math.random() * _MAX_RAND_ID);
 const _DATABASE =
   'projects/long-door-651/instances/' +
