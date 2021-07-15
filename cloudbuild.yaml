@@ -1,0 +1,12 @@
+steps:
+- name: node:10
+  entrypoint: git
+  args: ['submodule', 'update', '--init', '--recursive']
+- name: node:10
+  dir: 'grpc-gcp'
+  entrypoint: npm
+  args: ['install', '--unsafe-perm']
+- name: node:10
+  dir: 'grpc-gcp'
+  entrypoint: npm
+  args: ['run', 'system-test']
