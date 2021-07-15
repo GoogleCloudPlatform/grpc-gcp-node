@@ -32,7 +32,7 @@ const gax = require('google-gax');
 
 const _TARGET = 'spanner.googleapis.com:443';
 const _OAUTH_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
-const _DATABASE = 'projects/grpc-gcp/instances/sample/databases/benchmark';
+const _DATABASE = 'projects/long-door-651/instances/test-instance-791920/databases/test-db-883695';
 const _TEST_SQL = 'select id from storage';
 const _CONFIG_FILE = __dirname + '/spanner.grpc.config';
 
