@@ -100,9 +100,9 @@ describe("Spanner integration tests", () => {
   after(async function() {
     this.timeout(60000);
     // Delete test instance.
-    console.log(`Deleting instance ${instance.id}...`);
-    await instance.delete();
-    console.log(`Deleted instance ${_INSTANCE_ID}.`);
+    // console.log(`Deleting instance ${instance.id}...`);
+    // await instance.delete();
+    // console.log(`Deleted instance ${_INSTANCE_ID}.`);
   });
 
   for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
