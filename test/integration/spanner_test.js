@@ -48,8 +48,8 @@ const _CONFIG_FILE = `${__dirname}/spanner.grpc.config`;
 
 const getGrpcGcpObjects = require('../../build/src');
 
-const spanner = new Spanner({projectId: _PROJECT_ID});
-const instance = spanner.instance(_INSTANCE_ID);
+// const spanner = new Spanner({projectId: _PROJECT_ID});
+// const instance = spanner.instance(_INSTANCE_ID);
 
 // describe("Spanner integration tests", () => {
 //
