@@ -35,17 +35,16 @@
     "@grpc/grpc-js": "^1.1.1"
   },
   "devDependencies": {
-    "@grpc/proto-loader": "0.6.2",
-    "@google-cloud/spanner": "^5.12.0",
-    "c8": "7.7.2",
-    "google-auth-library": "7.3.0",
-    "google-gax": "2.14.1",
-    "google-protobuf": "3.17.1",
-    "grpc": "1.24.10",
-    "grpc-tools": "1.11.1",
-    "gts": "3.1.0",
-    "mocha": "8.4.0",
-    "typescript": "4.3.2"
+    "@grpc/proto-loader": "^0.5.4",
+    "c8": "^7.1.1",
+    "google-auth-library": "^6.0.0",
+    "google-gax": "^2.3.0",
+    "google-protobuf": "^3.12.2",
+    "grpc": "^1.24.2",
+    "grpc-tools": "^1.8.1",
+    "gts": "^2.0.2",
+    "mocha": "^7.1.1",
+    "typescript": "~3.8.3"
   },
   "files": [
     "build/src"
