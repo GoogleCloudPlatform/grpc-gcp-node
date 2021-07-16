@@ -5,7 +5,7 @@
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc && cp -r src/generated build/src/",
-    "system-test": "c8 mocha test/integration/*.js --reporter spec --timeout 10000",
+    "system-test": "c8 mocha test/integration/*.js --reporter spec --timeout 10000 --grpclib grpc && c8 mocha test/integration/*.js --reporter spec --timeout 10000 --grpclib @grpc/grpc-js",
     "test": "c8 mocha test/unit/*.js --reporter spec",
     "lint": "gts check src/**/*.ts",
     "fix": "gts fix",
