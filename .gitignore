@@ -8,5 +8,5 @@ npm-debug.log
 coverage
 
 # generated code
-grpc-gcp/test/google
+test/google
 cloudprober/google

@@ -16,9 +16,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: node --version
       - run: npm install
-        working-directory: ./grpc-gcp
       - run: npm test
-        working-directory: ./grpc-gcp
   windows:
     runs-on: windows-latest
     steps:
@@ -27,9 +25,7 @@ jobs:
         with:
           node-version: 14
       - run: npm install
-        working-directory: ./grpc-gcp
       - run: npm test
-        working-directory: ./grpc-gcp
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +34,4 @@ jobs:
         with:
           node-version: 10
       - run: npm install
-        working-directory: ./grpc-gcp
       - run: npm run lint
-        working-directory: ./grpc-gcp
