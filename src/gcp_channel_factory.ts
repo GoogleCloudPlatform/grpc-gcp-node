@@ -63,7 +63,7 @@ export function getGcpChannelFactoryClass(
     private channelRefs: ChannelRef[] = [];
     private target: string;
     private credentials: grpcType.ChannelCredentials;
-    private debugHeaderPeriodSecs: number;
+    private debugHeaderIntervalSecs: number;
 
     /**
      * @param address The address of the server to connect to.
@@ -87,7 +87,7 @@ export function getGcpChannelFactoryClass(
       this.minSize = 1;
       this.maxSize = 10;
       this.maxConcurrentStreamsLowWatermark = 100;
-      this.debugHeaderPeriodSecs = 0;
+      this.debugHeaderIntervalSecs = 0;
       const gcpApiConfig = options.gcpApiConfig;
       if (gcpApiConfig) {
         if (gcpApiConfig.channelPool) {
@@ -102,7 +102,7 @@ export function getGcpChannelFactoryClass(
           if (this.maxSize < this.minSize) {
             throw new Error('Invalid channelPool config: minSize must <= maxSize')
           }
-          this.debugHeaderPeriodSecs = channelPool.debugHeaderPeriodSecs || 0;
+          this.debugHeaderIntervalSecs = channelPool.debugHeaderPeriodSecs || 0;
         }
         this.initMethodToAffinityMap(gcpApiConfig);
       }
@@ -193,7 +193,7 @@ export function getGcpChannelFactoryClass(
       const channelRef = new ChannelRef(grpcChannel, size);
       this.channelRefs.push(channelRef);
 
-      if (this.debugHeaderPeriodSecs) {
+      if (this.debugHeaderIntervalSecs) {
         this.setupDebugHeadersOnChannelTransition(channelRef);
       }
 
