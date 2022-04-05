@@ -21,7 +21,7 @@ import {promisify} from 'util';
 
 import {ChannelRef} from './channel_ref';
 import * as protoRoot from './generated/grpc_gcp';
-import {ConnectivityState} from '@grpc/grpc-js/build/src/connectivity-state';
+import {connectivityState} from '@grpc/grpc-js';
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import IAffinityConfig = protoRoot.grpc.gcp.IAffinityConfig;
 
@@ -208,7 +208,7 @@ export function getGcpChannelFactoryClass(
       }
 
       let currentState = channel.getChannel().getConnectivityState(false);
-      if (currentState == ConnectivityState.SHUTDOWN) {
+      if (currentState == connectivityState.SHUTDOWN) {
         return;
       }
 
