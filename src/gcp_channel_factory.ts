@@ -117,6 +117,10 @@ export function getGcpChannelFactoryClass(
       return this.channelRefs[0].getChannel().getChannelzRef();
     }
 
+    getChannelzRef(): any {
+      throw new Error("channelz is not supported for channel pools.")
+    }
+
     private initMethodToAffinityMap(gcpApiConfig: ApiConfig): void {
       const methodList = gcpApiConfig.method;
       if (methodList) {
