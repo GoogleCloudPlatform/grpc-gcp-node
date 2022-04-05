@@ -103,7 +103,7 @@ export function getGcpChannelFactoryClass(
       this.getChannelRef();
     }
 
-    getChannelzRef(): any {
+    getChannelzRef() {
       return this.channelRefs[0].getChannel().getChannelzRef();
     }
 
