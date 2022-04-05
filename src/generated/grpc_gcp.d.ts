@@ -107,6 +107,9 @@ export namespace grpc {
             /** ChannelPoolConfig maxSize */
             maxSize?: (number|null);
 
+            /** ChannelPoolConfig minSize */
+            minSize?: (number|null);
+
             /** ChannelPoolConfig idleTimeout */
             idleTimeout?: (number|Long|null);
 
@@ -125,6 +128,9 @@ export namespace grpc {
 
             /** ChannelPoolConfig maxSize. */
             public maxSize: number;
+
+            /** ChannelPoolConfig minSize. */
+            public minSize: number;
 
             /** ChannelPoolConfig idleTimeout. */
             public idleTimeout: (number|Long);

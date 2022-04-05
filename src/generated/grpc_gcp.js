@@ -270,6 +270,7 @@ $root.grpc = (function() {
              * @memberof grpc.gcp
              * @interface IChannelPoolConfig
              * @property {number|null} [maxSize] ChannelPoolConfig maxSize
+             * @property {number|null} [minSize] ChannelPoolConfig minSize
              * @property {number|Long|null} [idleTimeout] ChannelPoolConfig idleTimeout
              * @property {number|null} [maxConcurrentStreamsLowWatermark] ChannelPoolConfig maxConcurrentStreamsLowWatermark
              */
@@ -296,6 +297,14 @@ $root.grpc = (function() {
              * @instance
              */
             ChannelPoolConfig.prototype.maxSize = 0;
+
+            /**
+             * ChannelPoolConfig minSize.
+             * @member {number} minSize
+             * @memberof grpc.gcp.ChannelPoolConfig
+             * @instance
+             */
+            ChannelPoolConfig.prototype.minSize = 0;
 
             /**
              * ChannelPoolConfig idleTimeout.
@@ -343,6 +352,8 @@ $root.grpc = (function() {
                     writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.idleTimeout);
                 if (message.maxConcurrentStreamsLowWatermark != null && Object.hasOwnProperty.call(message, "maxConcurrentStreamsLowWatermark"))
                     writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.maxConcurrentStreamsLowWatermark);
+                if (message.minSize != null && Object.hasOwnProperty.call(message, "minSize"))
+                    writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.minSize);
                 return writer;
             };
 
@@ -379,6 +390,9 @@ $root.grpc = (function() {
                     switch (tag >>> 3) {
                     case 1:
                         message.maxSize = reader.uint32();
+                        break;
+                    case 4:
+                        message.minSize = reader.uint32();
                         break;
                     case 2:
                         message.idleTimeout = reader.uint64();
@@ -424,6 +438,9 @@ $root.grpc = (function() {
                 if (message.maxSize != null && message.hasOwnProperty("maxSize"))
                     if (!$util.isInteger(message.maxSize))
                         return "maxSize: integer expected";
+                if (message.minSize != null && message.hasOwnProperty("minSize"))
+                    if (!$util.isInteger(message.minSize))
+                        return "minSize: integer expected";
                 if (message.idleTimeout != null && message.hasOwnProperty("idleTimeout"))
                     if (!$util.isInteger(message.idleTimeout) && !(message.idleTimeout && $util.isInteger(message.idleTimeout.low) && $util.isInteger(message.idleTimeout.high)))
                         return "idleTimeout: integer|Long expected";
@@ -447,6 +464,8 @@ $root.grpc = (function() {
                 var message = new $root.grpc.gcp.ChannelPoolConfig();
                 if (object.maxSize != null)
                     message.maxSize = object.maxSize >>> 0;
+                if (object.minSize != null)
+                    message.minSize = object.minSize >>> 0;
                 if (object.idleTimeout != null)
                     if ($util.Long)
                         (message.idleTimeout = $util.Long.fromValue(object.idleTimeout)).unsigned = true;
@@ -482,6 +501,7 @@ $root.grpc = (function() {
                     } else
                         object.idleTimeout = options.longs === String ? "0" : 0;
                     object.maxConcurrentStreamsLowWatermark = 0;
+                    object.minSize = 0;
                 }
                 if (message.maxSize != null && message.hasOwnProperty("maxSize"))
                     object.maxSize = message.maxSize;
@@ -492,6 +512,8 @@ $root.grpc = (function() {
                         object.idleTimeout = options.longs === String ? $util.Long.prototype.toString.call(message.idleTimeout) : options.longs === Number ? new $util.LongBits(message.idleTimeout.low >>> 0, message.idleTimeout.high >>> 0).toNumber(true) : message.idleTimeout;
                 if (message.maxConcurrentStreamsLowWatermark != null && message.hasOwnProperty("maxConcurrentStreamsLowWatermark"))
                     object.maxConcurrentStreamsLowWatermark = message.maxConcurrentStreamsLowWatermark;
+                if (message.minSize != null && message.hasOwnProperty("minSize"))
+                    object.minSize = message.minSize;
                 return object;
             };
 
