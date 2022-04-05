@@ -52,6 +52,7 @@ export function getGcpChannelFactoryClass(
    * A channel management factory that implements grpc.Channel APIs.
    */
   return class GcpChannelFactory implements GcpChannelFactoryInterface {
+    private minSize: number;
     private maxSize: number;
     private maxConcurrentStreamsLowWatermark: number;
     private options: {};
@@ -80,16 +81,22 @@ export function getGcpChannelFactoryClass(
           'Channel options must be an object with string keys and integer or string values'
         );
       }
+      this.minSize = 1;
       this.maxSize = 10;
       this.maxConcurrentStreamsLowWatermark = 100;
       const gcpApiConfig = options.gcpApiConfig;
       if (gcpApiConfig) {
         if (gcpApiConfig.channelPool) {
           const channelPool = gcpApiConfig.channelPool;
+          if (channelPool.minSize) this.minSize = channelPool.minSize;
           if (channelPool.maxSize) this.maxSize = channelPool.maxSize;
           if (channelPool.maxConcurrentStreamsLowWatermark) {
             this.maxConcurrentStreamsLowWatermark =
               channelPool.maxConcurrentStreamsLowWatermark;
+          }
+
+          if (this.maxSize < this.minSize) {
+            throw new Error('Invalid channelPool config: minSize must <= maxSize')
           }
         }
         this.initMethodToAffinityMap(gcpApiConfig);
@@ -99,8 +106,11 @@ export function getGcpChannelFactoryClass(
       this.options = options;
       this.target = address;
       this.credentials = credentials;
-      // Initialize channel in the pool to avoid empty pool.
-      this.getChannelRef();
+
+      // Create initial channels
+      for (let i = 0; i < this.minSize; i++) {
+        this.addChannel();
+      }
     }
 
     getChannelzRef() {
@@ -154,21 +164,30 @@ export function getGcpChannelFactoryClass(
       // If all existing channels are busy, and channel pool still has capacity,
       // create a new channel in the pool.
       if (size < this.maxSize) {
-        const channelOptions = Object.assign(
-          {[CLIENT_CHANNEL_ID]: size},
-          this.options
-        );
-        const grpcChannel = new grpc.Channel(
-          this.target,
-          this.credentials,
-          channelOptions
-        );
-        const channelRef = new ChannelRef(grpcChannel, size);
-        this.channelRefs.push(channelRef);
-        return channelRef;
+        return this.addChannel();
       } else {
         return this.channelRefs[0];
       }
+    }
+
+    /**
+     * Create a new channel and add it to the pool.
+     * @private
+     */
+    private addChannel() : ChannelRef {
+      const size = this.channelRefs.length;
+      const channelOptions = Object.assign(
+          {[CLIENT_CHANNEL_ID]: size},
+          this.options
+      );
+      const grpcChannel = new grpc.Channel(
+          this.target,
+          this.credentials,
+          channelOptions
+      );
+      const channelRef = new ChannelRef(grpcChannel, size);
+      this.channelRefs.push(channelRef);
+      return channelRef;
     }
 
     /**

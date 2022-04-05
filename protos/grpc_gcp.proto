@@ -27,6 +27,8 @@ message ApiConfig {
 message ChannelPoolConfig {
   // The max number of channels in the pool.
   uint32 max_size = 1;
+  // The min number of channels in the pool.
+  uint32 min_size = 4;
   // The idle timeout (seconds) of channels without bound affinity sessions.
   uint64 idle_timeout = 2;
   // The low watermark of max number of concurrent streams in a channel.
