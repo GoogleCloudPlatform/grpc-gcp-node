@@ -100,6 +100,21 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             assert(channel instanceof grpcGcp.GcpChannelFactory);
           });
         });
+
+        it('should build min channels', () => {
+          const channel = new grpcGcp.GcpChannelFactory(
+              'hostname',
+              insecureCreds,
+              {
+                gcpApiConfig: grpcGcp.createGcpApiConfig({
+                  "channelPool": {
+                    "minSize": 3
+                  }
+                })
+              }
+          );
+          assert.equal(channel.channelRefs.length, 3);
+        })
       });
       describe('close', () => {
         let channel;
