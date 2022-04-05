@@ -102,7 +102,7 @@ export function getGcpChannelFactoryClass(
           if (this.maxSize < this.minSize) {
             throw new Error('Invalid channelPool config: minSize must <= maxSize')
           }
-          this.debugHeaderIntervalSecs = channelPool.debugHeaderPeriodSecs || 0;
+          this.debugHeaderIntervalSecs = channelPool.debugHeaderIntervalSecs || 0;
         }
         this.initMethodToAffinityMap(gcpApiConfig);
       }
