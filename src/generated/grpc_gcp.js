@@ -273,6 +273,7 @@ $root.grpc = (function() {
              * @property {number|null} [minSize] ChannelPoolConfig minSize
              * @property {number|Long|null} [idleTimeout] ChannelPoolConfig idleTimeout
              * @property {number|null} [maxConcurrentStreamsLowWatermark] ChannelPoolConfig maxConcurrentStreamsLowWatermark
+             * @property {number|null} [debugHeaderIntervalSecs] ChannelPoolConfig debugHeaderIntervalSecs
              */
 
             /**
@@ -323,6 +324,14 @@ $root.grpc = (function() {
             ChannelPoolConfig.prototype.maxConcurrentStreamsLowWatermark = 0;
 
             /**
+             * ChannelPoolConfig debugHeaderIntervalSecs.
+             * @member {number} debugHeaderIntervalSecs
+             * @memberof grpc.gcp.ChannelPoolConfig
+             * @instance
+             */
+            ChannelPoolConfig.prototype.debugHeaderIntervalSecs = 0;
+
+            /**
              * Creates a new ChannelPoolConfig instance using the specified properties.
              * @function create
              * @memberof grpc.gcp.ChannelPoolConfig
@@ -354,6 +363,8 @@ $root.grpc = (function() {
                     writer.uint32(/* id 3, wireType 0 =*/24).uint32(message.maxConcurrentStreamsLowWatermark);
                 if (message.minSize != null && Object.hasOwnProperty.call(message, "minSize"))
                     writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.minSize);
+                if (message.debugHeaderIntervalSecs != null && Object.hasOwnProperty.call(message, "debugHeaderIntervalSecs"))
+                    writer.uint32(/* id 5, wireType 0 =*/40).uint32(message.debugHeaderIntervalSecs);
                 return writer;
             };
 
@@ -399,6 +410,9 @@ $root.grpc = (function() {
                         break;
                     case 3:
                         message.maxConcurrentStreamsLowWatermark = reader.uint32();
+                        break;
+                    case 5:
+                        message.debugHeaderIntervalSecs = reader.uint32();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -447,6 +461,9 @@ $root.grpc = (function() {
                 if (message.maxConcurrentStreamsLowWatermark != null && message.hasOwnProperty("maxConcurrentStreamsLowWatermark"))
                     if (!$util.isInteger(message.maxConcurrentStreamsLowWatermark))
                         return "maxConcurrentStreamsLowWatermark: integer expected";
+                if (message.debugHeaderIntervalSecs != null && message.hasOwnProperty("debugHeaderIntervalSecs"))
+                    if (!$util.isInteger(message.debugHeaderIntervalSecs))
+                        return "debugHeaderIntervalSecs: integer expected";
                 return null;
             };
 
@@ -477,6 +494,8 @@ $root.grpc = (function() {
                         message.idleTimeout = new $util.LongBits(object.idleTimeout.low >>> 0, object.idleTimeout.high >>> 0).toNumber(true);
                 if (object.maxConcurrentStreamsLowWatermark != null)
                     message.maxConcurrentStreamsLowWatermark = object.maxConcurrentStreamsLowWatermark >>> 0;
+                if (object.debugHeaderIntervalSecs != null)
+                    message.debugHeaderIntervalSecs = object.debugHeaderIntervalSecs >>> 0;
                 return message;
             };
 
@@ -502,6 +521,7 @@ $root.grpc = (function() {
                         object.idleTimeout = options.longs === String ? "0" : 0;
                     object.maxConcurrentStreamsLowWatermark = 0;
                     object.minSize = 0;
+                    object.debugHeaderIntervalSecs = 0;
                 }
                 if (message.maxSize != null && message.hasOwnProperty("maxSize"))
                     object.maxSize = message.maxSize;
@@ -514,6 +534,8 @@ $root.grpc = (function() {
                     object.maxConcurrentStreamsLowWatermark = message.maxConcurrentStreamsLowWatermark;
                 if (message.minSize != null && message.hasOwnProperty("minSize"))
                     object.minSize = message.minSize;
+                if (message.debugHeaderIntervalSecs != null && message.hasOwnProperty("debugHeaderIntervalSecs"))
+                    object.debugHeaderIntervalSecs = message.debugHeaderIntervalSecs;
                 return object;
             };
 
