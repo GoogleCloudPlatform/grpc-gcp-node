@@ -173,7 +173,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           let m2 = await makeCallAndReturnMeta();
           assert.deepStrictEqual(m2.get('x-return-encrypted-headers'), []);
 
-          await promisify(setTimeout)(1000);
+          await promisify(setTimeout)(1100);
 
           let m3 = await makeCallAndReturnMeta();
           assert.deepStrictEqual(m3.get('x-return-encrypted-headers'), ['all_response']);
@@ -192,7 +192,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           let m2 = await makeCallAndReturnMeta();
           assert.deepStrictEqual(m2.get('x-return-encrypted-headers'), []);
 
-          await promisify(setTimeout)(1000);
+          await promisify(setTimeout)(1100);
 
           let m3 = await makeCallAndReturnMeta();
           assert.deepStrictEqual(m3.get('x-return-encrypted-headers'), ['all_response']);
