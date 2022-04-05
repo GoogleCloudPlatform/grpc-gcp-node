@@ -103,6 +103,10 @@ export function getGcpChannelFactoryClass(
       this.getChannelRef();
     }
 
+    getChannelzRef() {
+      return this.channelRefs[0].getChannel().getChannelzRef();
+    }
+
     private initMethodToAffinityMap(gcpApiConfig: ApiConfig): void {
       const methodList = gcpApiConfig.method;
       if (methodList) {

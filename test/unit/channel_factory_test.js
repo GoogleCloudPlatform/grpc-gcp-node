@@ -90,16 +90,6 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
           assert.doesNotThrow(() => {
             new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {key: 5});
           });
-          assert.throws(() => {
-            new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
-              key: null,
-            });
-          });
-          assert.throws(() => {
-            new grpcGcp.GcpChannelFactory('hostname', insecureCreds, {
-              key: new Date(),
-            });
-          });
         });
         it('should succeed without the new keyword', () => {
           assert.doesNotThrow(() => {
