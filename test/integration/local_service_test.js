@@ -151,6 +151,9 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
               channelOptions
           );
         });
+        afterEach(() => {
+          client.close();
+        });
         it('with unary call', async () => {
           function makeCallAndReturnMeta() {
             return new Promise((resolve, reject) => {
@@ -180,6 +183,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             return new Promise((resolve, reject) => {
               const call = client.serverStream({}, new grpc.Metadata());
               call.on('metadata', meta => resolve(meta));
+              call.on('data', (d) => {})
             });
           }
           let m1 = await makeCallAndReturnMeta();

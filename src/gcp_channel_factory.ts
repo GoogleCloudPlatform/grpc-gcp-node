@@ -202,6 +202,11 @@ export function getGcpChannelFactoryClass(
 
     private setupDebugHeadersOnChannelTransition(channel: ChannelRef) {
       const self = this;
+
+      if (channel.isClosed()) {
+        return;
+      }
+
       let currentState = channel.getChannel().getConnectivityState(false);
       if (currentState == ConnectivityState.SHUTDOWN) {
         return;
@@ -264,7 +269,7 @@ export function getGcpChannelFactoryClass(
      */
     close(): void {
       this.channelRefs.forEach(ref => {
-        ref.getChannel().close();
+        ref.close();
       });
     }
 
