@@ -21,7 +21,7 @@ import {promisify} from 'util';
 
 import {ChannelRef} from './channel_ref';
 import * as protoRoot from './generated/grpc_gcp';
-
+import {connectivityState} from '@grpc/grpc-js';
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import IAffinityConfig = protoRoot.grpc.gcp.IAffinityConfig;
 
@@ -34,6 +34,8 @@ export interface GcpChannelFactoryInterface extends grpcType.ChannelInterface {
   getAffinityConfig(methodName: string): IAffinityConfig;
   bind(channelRef: ChannelRef, affinityKey: string): void;
   unbind(boundKey?: string): void;
+  shouldRequestDebugHeaders(lastRequested: Date | null) : boolean;
+
 }
 
 export interface GcpChannelFactoryConstructor {
@@ -61,6 +63,7 @@ export function getGcpChannelFactoryClass(
     private channelRefs: ChannelRef[] = [];
     private target: string;
     private credentials: grpcType.ChannelCredentials;
+    private debugHeaderIntervalSecs: number;
 
     /**
      * @param address The address of the server to connect to.
@@ -84,6 +87,7 @@ export function getGcpChannelFactoryClass(
       this.minSize = 1;
       this.maxSize = 10;
       this.maxConcurrentStreamsLowWatermark = 100;
+      this.debugHeaderIntervalSecs = 0;
       const gcpApiConfig = options.gcpApiConfig;
       if (gcpApiConfig) {
         if (gcpApiConfig.channelPool) {
@@ -98,6 +102,7 @@ export function getGcpChannelFactoryClass(
           if (this.maxSize < this.minSize) {
             throw new Error('Invalid channelPool config: minSize must <= maxSize')
           }
+          this.debugHeaderIntervalSecs = channelPool.debugHeaderIntervalSecs || 0;
         }
         this.initMethodToAffinityMap(gcpApiConfig);
       }
@@ -187,8 +192,32 @@ export function getGcpChannelFactoryClass(
       );
       const channelRef = new ChannelRef(grpcChannel, size);
       this.channelRefs.push(channelRef);
+
+      if (this.debugHeaderIntervalSecs) {
+        this.setupDebugHeadersOnChannelTransition(channelRef);
+      }
+
       return channelRef;
     }
+
+    private setupDebugHeadersOnChannelTransition(channel: ChannelRef) {
+      const self = this;
+
+      if (channel.isClosed()) {
+        return;
+      }
+
+      let currentState = channel.getChannel().getConnectivityState(false);
+      if (currentState == connectivityState.SHUTDOWN) {
+        return;
+      }
+
+      channel.getChannel().watchConnectivityState(currentState, Infinity, (e) => {
+        channel.forceDebugHeadersOnNextRequest();
+        self.setupDebugHeadersOnChannelTransition(channel);
+      });
+    }
+
 
     /**
      * Get AffinityConfig associated with a certain method.
@@ -196,6 +225,14 @@ export function getGcpChannelFactoryClass(
      */
     getAffinityConfig(methodName: string): IAffinityConfig {
       return this.methodToAffinity[methodName];
+    }
+
+    shouldRequestDebugHeaders(lastRequested: Date | null) : boolean {
+      if (this.debugHeaderIntervalSecs < 0) return true;
+      else if (this.debugHeaderIntervalSecs == 0) return false;
+      else if (!lastRequested) return true;
+
+      return new Date().getTime() - lastRequested.getTime() > this.debugHeaderIntervalSecs * 1000;
     }
 
     /**
@@ -232,7 +269,7 @@ export function getGcpChannelFactoryClass(
      */
     close(): void {
       this.channelRefs.forEach(ref => {
-        ref.getChannel().close();
+        ref.close();
       });
     }
 

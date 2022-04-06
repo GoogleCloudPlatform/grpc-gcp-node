@@ -68,11 +68,12 @@ export = (grpc: GrpcModule) => {
   function gcpCallInvocationTransformer<RequestType, ResponseType>(
     callProperties: grpcType.CallProperties<RequestType, ResponseType>
   ): grpcType.CallProperties<RequestType, ResponseType> {
-    const channelFactory = callProperties.channel;
-    if (!channelFactory || !(channelFactory instanceof GcpChannelFactory)) {
+    if (!callProperties.channel || !(callProperties.channel instanceof GcpChannelFactory)) {
       // The gcpCallInvocationTransformer needs to use gcp channel factory.
       return callProperties;
     }
+
+    const channelFactory = callProperties.channel as GcpChannelFactoryInterface;
 
     const argument = callProperties.argument;
     const metadata = callProperties.metadata;
@@ -151,6 +152,11 @@ export = (grpc: GrpcModule) => {
       ? callOptions.interceptors
       : [];
     newCallOptions.interceptors = interceptors.concat([postProcessInterceptor]);
+
+    if (channelFactory.shouldRequestDebugHeaders(channelRef.getDebugHeadersRequestedAt())) {
+      metadata.set('x-return-encrypted-headers', 'all_response');
+      channelRef.notifyDebugHeadersRequested();
+    }
 
     return {
       argument,

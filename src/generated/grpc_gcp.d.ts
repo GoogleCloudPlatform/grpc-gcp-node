@@ -115,6 +115,9 @@ export namespace grpc {
 
             /** ChannelPoolConfig maxConcurrentStreamsLowWatermark */
             maxConcurrentStreamsLowWatermark?: (number|null);
+
+            /** ChannelPoolConfig debugHeaderIntervalSecs */
+            debugHeaderIntervalSecs?: (number|null);
         }
 
         /** Represents a ChannelPoolConfig. */
@@ -137,6 +140,9 @@ export namespace grpc {
 
             /** ChannelPoolConfig maxConcurrentStreamsLowWatermark. */
             public maxConcurrentStreamsLowWatermark: number;
+
+            /** ChannelPoolConfig debugHeaderIntervalSecs. */
+            public debugHeaderIntervalSecs: number;
 
             /**
              * Creates a new ChannelPoolConfig instance using the specified properties.

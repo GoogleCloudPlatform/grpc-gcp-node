@@ -55,7 +55,7 @@ const grpcLibName = process.argv[argIndex + 1];
 
 describe('Using ' + grpcLibName, () => {
   before(async function () {
-    this.timeout(60000);
+    this.timeout(120000);
     // Create test instance.
     console.log(`Creating instance ${instance.formattedName_}.`);
     const [, instOp] = await instance.create({
@@ -101,7 +101,7 @@ describe('Using ' + grpcLibName, () => {
   });
 
   after(async function () {
-    this.timeout(60000);
+    this.timeout(120000);
     // Delete test instance.
     console.log(`Deleting instance ${instance.id}...`);
     await instance.delete();

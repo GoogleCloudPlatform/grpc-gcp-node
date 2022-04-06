@@ -35,6 +35,14 @@ message ChannelPoolConfig {
   // New channel will be created once it get hit, until we reach the max size
   // of the channel pool.
   uint32 max_concurrent_streams_low_watermark = 3;
+
+  // This will request debug response headers from the load balancer.
+  // The headers are meant to help diagnose issues when connecting to GCP
+  // services. The headers are primarily useful to support engineers that will
+  // be able to decrypt them. The headers have a fairly large payload (~1kib),
+  // so will be requested at most once per this period. A negative number will
+  // request the headers for every request, 0 will never request headers.
+  uint32 debug_header_interval_secs = 5;
 }
 
 message MethodConfig {

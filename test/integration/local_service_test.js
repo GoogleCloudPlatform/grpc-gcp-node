@@ -25,6 +25,7 @@
 const protoLoader = require('@grpc/proto-loader');
 const assert = require('assert');
 const getGrpcGcpObjects = require('../../build/src');
+const { promisify } = require('util')
 
 const PROTO_PATH = __dirname + '/../../protos/test_service.proto';
 const packageDef = protoLoader.loadSync(PROTO_PATH);
@@ -129,6 +130,74 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
         });
       });
 
+      // describe('Debug headers', () => {
+      //   let client;
+      //   beforeEach(() => {
+      //     const channelOptions = {
+      //       channelFactoryOverride: grpcGcp.gcpChannelFactoryOverride,
+      //       callInvocationTransformer: grpcGcp.gcpCallInvocationTransformer,
+      //       gcpApiConfig: grpcGcp.createGcpApiConfig({
+      //         channelPool: {
+      //           maxSize: 1,
+      //           maxConcurrentStreamsLowWatermark: 1,
+      //           debugHeaderIntervalSecs: 1
+      //         },
+      //       }),
+      //     };
+
+      //     client = new Client(
+      //         'localhost:' + port,
+      //         grpc.credentials.createInsecure(),
+      //         channelOptions
+      //     );
+      //   });
+      //   afterEach(() => {
+      //     client.close();
+      //   });
+      //   it('with unary call', async () => {
+      //     function makeCallAndReturnMeta() {
+      //       return new Promise((resolve, reject) => {
+      //         let lastMeta = null;
+
+      //         const call = client.unary({}, new grpc.Metadata(), (err, data) => {
+      //           if (err) reject(err);
+      //           else resolve(lastMeta);
+      //         });
+
+      //         call.on('metadata', meta => lastMeta = meta);
+      //       });
+      //     }
+      //     let m1 = await makeCallAndReturnMeta();
+      //     assert.deepStrictEqual(m1.get('x-return-encrypted-headers'), ['all_response']);
+
+      //     let m2 = await makeCallAndReturnMeta();
+      //     assert.deepStrictEqual(m2.get('x-return-encrypted-headers'), []);
+
+      //     await promisify(setTimeout)(1100);
+
+      //     let m3 = await makeCallAndReturnMeta();
+      //     assert.deepStrictEqual(m3.get('x-return-encrypted-headers'), ['all_response']);
+      //   });
+      //   it('with server streaming call', async () => {
+      //     function makeCallAndReturnMeta() {
+      //       return new Promise((resolve, reject) => {
+      //         const call = client.serverStream({}, new grpc.Metadata());
+      //         call.on('metadata', meta => resolve(meta));
+      //         call.on('data', (d) => {})
+      //       });
+      //     }
+      //     let m1 = await makeCallAndReturnMeta();
+      //     assert.deepStrictEqual(m1.get('x-return-encrypted-headers'), ['all_response']);
+
+      //     let m2 = await makeCallAndReturnMeta();
+      //     assert.deepStrictEqual(m2.get('x-return-encrypted-headers'), []);
+
+      //     await promisify(setTimeout)(1100);
+
+      //     let m3 = await makeCallAndReturnMeta();
+      //     assert.deepStrictEqual(m3.get('x-return-encrypted-headers'), ['all_response']);
+      //   });
+      // });
       describe('Echo metadata', () => {
         let metadata;
         let client;

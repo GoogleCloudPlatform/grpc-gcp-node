@@ -27,6 +27,9 @@ export class ChannelRef {
   private readonly channelId: number;
   private affinityCount: number;
   private activeStreamsCount: number;
+  private debugHeadersRequestedAt: Date | null;
+  private shouldForceDebugHeadersOnNextRequest: boolean;
+  private closed: boolean;
 
   /**
    * @param channel The underlying grpc channel.
@@ -44,6 +47,18 @@ export class ChannelRef {
     this.channelId = channelId;
     this.affinityCount = affinityCount ? affinityCount : 0;
     this.activeStreamsCount = activeStreamsCount ? activeStreamsCount : 0;
+    this.debugHeadersRequestedAt = null;
+    this.shouldForceDebugHeadersOnNextRequest = false;
+    this.closed = false;
+  }
+
+  close() {
+    this.closed = true;
+    this.channel.close();
+  }
+
+  isClosed() {
+    return this.closed;
   }
 
   affinityCountIncr() {
@@ -68,6 +83,18 @@ export class ChannelRef {
 
   getActiveStreamsCount() {
     return this.activeStreamsCount;
+  }
+
+  forceDebugHeadersOnNextRequest() {
+    this.shouldForceDebugHeadersOnNextRequest = true;
+  }
+  notifyDebugHeadersRequested() {
+    this.debugHeadersRequestedAt = new Date();
+    this.shouldForceDebugHeadersOnNextRequest = false;
+  }
+
+  getDebugHeadersRequestedAt(): Date | null {
+    return this.debugHeadersRequestedAt;
   }
 
   getChannel() {
