@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.4.1](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v0.4.0...v0.4.1) (2022-04-06)
+
+
+### Bug Fixes
+
+* match grpc version to gax ([#141](https://github.com/GoogleCloudPlatform/grpc-gcp-node/issues/141)) ([5b86ac8](https://github.com/GoogleCloudPlatform/grpc-gcp-node/commit/5b86ac895a69d583f43d02c9ff45683167b36c35))
+
 ## [0.4.0](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v0.3.3...v0.4.0) (2022-04-06)
 
 
