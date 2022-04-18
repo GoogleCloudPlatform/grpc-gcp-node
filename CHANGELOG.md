@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.4.2](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v0.4.1...v0.4.2) (2022-04-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @grpc/grpc-js to ~1.6.0 ([#143](https://github.com/GoogleCloudPlatform/grpc-gcp-node/issues/143)) ([9e448f0](https://github.com/GoogleCloudPlatform/grpc-gcp-node/commit/9e448f0a99468fa570846b790a26233ef49a003e))
+
 ### [0.4.1](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v0.4.0...v0.4.1) (2022-04-06)
 
 
