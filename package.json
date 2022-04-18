@@ -1,6 +1,6 @@
 {
   "name": "grpc-gcp",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Extension for supporting Google Cloud Platform specific features for gRPC.",
   "main": "build/src/index.js",
   "scripts": {
