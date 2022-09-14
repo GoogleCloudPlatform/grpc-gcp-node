@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/GoogleCloudPlatform/grpc-gcp-node#readme",
   "engines": {
-    "node": ">=8"
+    "node": ">=12"
   },
   "dependencies": {
     "@grpc/grpc-js": "~1.6.0"
