@@ -35,7 +35,7 @@
     "@grpc/grpc-js": "~1.7.0"
   },
   "devDependencies": {
-    "@grpc/proto-loader": "^0.6.2",
+    "@grpc/proto-loader": "^0.7.0",
     "@google-cloud/spanner": "^6.0.0",
     "c8": "^7.7.2",
     "google-auth-library": "^8.0.0",
