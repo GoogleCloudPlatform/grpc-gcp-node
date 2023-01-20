@@ -28,13 +28,9 @@ import * as protoRoot from './generated/grpc_gcp';
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import AffinityConfig = protoRoot.grpc.gcp.AffinityConfig;
 
-export interface GrpcInterface {
-  Channel: any;
-  connectivityState: any;
-  status: any;
-};
+type GrpcModule = typeof grpcType;
 
-export = (grpc: GrpcInterface) => {
+export = (grpc: GrpcModule) => {
   const GcpChannelFactory = getGcpChannelFactoryClass(grpc);
   /**
    * Create ApiConfig proto message from config object.
