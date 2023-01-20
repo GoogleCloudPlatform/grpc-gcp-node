@@ -24,6 +24,7 @@ import * as protoRoot from './generated/grpc_gcp';
 import {connectivityState} from '@grpc/grpc-js';
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import IAffinityConfig = protoRoot.grpc.gcp.IAffinityConfig;
+import {GrpcInterface} from './grpc_interface';
 
 const CLIENT_CHANNEL_ID = 'grpc_gcp.client_channel.id';
 
@@ -48,7 +49,7 @@ export interface GcpChannelFactoryConstructor {
 }
 
 export function getGcpChannelFactoryClass(
-  grpc: GrpcModule
+  grpc: GrpcInterface
 ): GcpChannelFactoryConstructor {
   /**
    * A channel management factory that implements grpc.Channel APIs.
