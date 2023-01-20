@@ -28,7 +28,7 @@ import * as protoRoot from './generated/grpc_gcp';
 import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import AffinityConfig = protoRoot.grpc.gcp.AffinityConfig;
 
-export interface GrpcInterface {
+interface GrpcInterface {
   Channel: any;
   connectivityState: any;
   status: any;
