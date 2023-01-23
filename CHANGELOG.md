@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v1.0.0...v1.0.1) (2023-01-23)
+
+
+### Bug Fixes
+
+* Define a generic interface to allow flexibility ([7e12a66](https://github.com/GoogleCloudPlatform/grpc-gcp-node/commit/7e12a662a3a02b0ee057a69dae872fd86c4bd1fc))
+
 ## [1.0.0](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v0.4.2...v1.0.0) (2022-09-14)
 
 
