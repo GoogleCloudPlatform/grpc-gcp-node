@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v1.0.1...v1.0.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* Fix missing runtime dependency on protobufjs ([8cc212f](https://github.com/GoogleCloudPlatform/grpc-gcp-node/commit/8cc212f908f1fe5b26d4deece3296335e633e3e5))
+
 ## [1.0.1](https://github.com/GoogleCloudPlatform/grpc-gcp-node/compare/v1.0.0...v1.0.1) (2023-01-23)
 
 
