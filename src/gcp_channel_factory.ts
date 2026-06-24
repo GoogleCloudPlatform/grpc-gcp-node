@@ -26,6 +26,8 @@ import ApiConfig = protoRoot.grpc.gcp.ApiConfig;
 import IAffinityConfig = protoRoot.grpc.gcp.IAffinityConfig;
 
 const CLIENT_CHANNEL_ID = 'grpc_gcp.client_channel.id';
+const CLEANUP_INTERVAL_MS = 30000; // Sweep every 30 seconds
+const IDLE_TIMEOUT_MS = 180000; // Keys are considered idle if unused for more than 3 minutes
 
 export type GrpcModule = typeof grpcType;
 
@@ -123,7 +125,11 @@ export function getGcpChannelFactoryClass(
         this.addChannel();
       }
 
-      this.cleanupTimer = setInterval(() => this.cleanupIdleKeys(), 30000);
+      // Periodically clean up affinity keys that haven't been accessed for a while to prevent unbounded growth.
+      this.cleanupTimer = setInterval(
+        () => this.cleanupIdleKeys(),
+        CLEANUP_INTERVAL_MS
+      );
       if (this.cleanupTimer.unref) {
         this.cleanupTimer.unref();
       }
@@ -202,7 +208,7 @@ export function getGcpChannelFactoryClass(
         key,
         lastAccessed,
       ] of this.affinityKeyLastAccessed.entries()) {
-        if (now - lastAccessed > 180000) {
+        if (now - lastAccessed > IDLE_TIMEOUT_MS) {
           // if a key is not in used for more than 3 minutes remove its binding
           keysToUnbind.push(key);
         }
@@ -288,6 +294,9 @@ export function getGcpChannelFactoryClass(
       existingChannelRef.affinityCountIncr();
     }
 
+    /**
+     * Checks if an affinity key is already bound to a channel.
+     */
     isBound(affinityKey: string): boolean {
       return this.affinityKeyToChannelRef.has(affinityKey);
     }

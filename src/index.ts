@@ -214,6 +214,7 @@ const setup = (grpc: GrpcModule) => {
    * @param channelFactory The channel management factory.
    * @param path Method path.
    * @param argument The request arguments object.
+   * @param overrideAffinityKey Optional affinity key provided in CallOptions.
    * @return Result containing bound affinity key and the chosen channel ref
    * object.
    */
