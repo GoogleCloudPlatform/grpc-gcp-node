@@ -163,7 +163,7 @@ export function getGcpChannelFactoryClass(
      * @return Wrapper containing the grpc channel.
      */
     getChannelRef(affinityKey?: string): ChannelRef {
-      if (affinityKey) {
+      if (affinityKey && this.affinityKeyLastAccessed.has(affinityKey)) {
         this.affinityKeyLastAccessed.set(affinityKey, Date.now());
       }
       if (affinityKey && this.affinityKeyToChannelRef.has(affinityKey)) {
@@ -290,7 +290,8 @@ export function getGcpChannelFactoryClass(
         this.affinityKeyToChannelRef.set(affinityKey, channelRef);
         existingChannelRef = channelRef;
       }
-      this.affinityKeyLastAccessed.set(affinityKey, Date.now());
+      // We explicitly do NOT add regular session keys to affinityKeyLastAccessed
+      // to ensure they are not cleaned up by the 3-minute TTL idle sweep.
       existingChannelRef.affinityCountIncr();
     }
 
