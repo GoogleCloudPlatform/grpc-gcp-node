@@ -212,7 +212,7 @@ const setup = (grpc: GrpcModule) => {
   /**
    * Handle channel affinity and pick a channel before call starts.
    * @param channelFactory The channel management factory.
-   * @param path Method path.
+   * @param affinityConfig Affinity configuration object.
    * @param argument The request arguments object.
    * @param overrideAffinityKey Optional affinity key provided in CallOptions.
    * @return Result containing bound affinity key and the chosen channel ref
@@ -256,7 +256,7 @@ const setup = (grpc: GrpcModule) => {
    * Handle channel affinity and streams count after call is done.
    * @param channelFactory The channel management factory.
    * @param channelRef ChannelRef instance that contains a real grpc channel.
-   * @param path Method path.
+   * @param affinityConfig Affinity configuration object.
    * @param boundKey Affinity key bound to a channel.
    * @param responseMsg Response proto message.
    */
