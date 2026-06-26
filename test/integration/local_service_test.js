@@ -346,7 +346,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             },
             method: [
               {
-                name: ['/TestService/unary'],
+                name: ['/TestService/Unary'],
                 affinity: {
                   command: 'PENDING',
                   affinityKey: 'ignored',
@@ -354,12 +354,21 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
               },
             ],
           });
+          const options = {gcpApiConfig};
+          options.channelOverride = grpcGcp.gcpChannelFactoryOverride(
+            'localhost:' + port,
+            grpc.credentials.createInsecure(),
+            options
+          );
+          options.callInvocationTransformer =
+            grpcGcp.gcpCallInvocationTransformer;
+
           client = new Client(
             'localhost:' + port,
             grpc.credentials.createInsecure(),
-            {gcpApiConfig}
+            options
           );
-          pool = client.getChannel();
+          pool = options.channelOverride;
         });
         afterEach(() => {
           client.close();
@@ -398,7 +407,7 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             // Force ABORTED (code 10) error via metadata
             const metadata = new grpc.Metadata();
             metadata.set('force-error-code', '10');
-            client.unary({}, {affinityKey, metadata}, err2 => {
+            client.unary({}, metadata, {affinityKey}, err2 => {
               assert.ok(err2);
               assert.strictEqual(err2.code, 10); // Verify it aborted
               assert.strictEqual(pool.isBound(affinityKey), false);
