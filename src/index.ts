@@ -100,7 +100,7 @@ const setup = (grpc: GrpcModule) => {
 
     const preProcessResult = preProcess(
       channelFactory,
-      path,
+      affinityConfig,
       argument,
       affinityKeyFromCallOptions
     );
@@ -145,7 +145,7 @@ const setup = (grpc: GrpcModule) => {
                 postProcess(
                   channelFactory,
                   channelRef,
-                  path,
+                  affinityConfig,
                   boundKey,
                   firstMessage
                 );
@@ -220,12 +220,12 @@ const setup = (grpc: GrpcModule) => {
    */
   function preProcess(
     channelFactory: GcpChannelFactoryInterface,
-    path: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    affinityConfig?: any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     argument?: any,
     overrideAffinityKey?: string
   ): {boundKey: string | undefined; channelRef: ChannelRef} {
-    const affinityConfig = channelFactory.getAffinityConfig(path);
     let boundKey = overrideAffinityKey;
     if (!boundKey && argument && affinityConfig) {
       const command = affinityConfig.command;
@@ -263,13 +263,13 @@ const setup = (grpc: GrpcModule) => {
   function postProcess(
     channelFactory: GcpChannelFactoryInterface,
     channelRef: ChannelRef,
-    path: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    affinityConfig?: any,
     boundKey?: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     responseMsg?: any
   ) {
     if (!channelFactory || !responseMsg) return;
-    const affinityConfig = channelFactory.getAffinityConfig(path);
     if (affinityConfig && affinityConfig.command) {
       const command = affinityConfig.command;
       if (command === AffinityConfig.Command.BIND) {

@@ -244,6 +244,84 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             assert.strictEqual(factory.isBound('active-key-1'), true);
             factory.close();
           });
+
+          it('should NOT cleanup regular session keys bound via bind', () => {
+            const factory = new grpcGcp.GcpChannelFactory(
+              'hostname',
+              insecureCreds,
+              {}
+            );
+            Date.now = () => 1000;
+            const ref = factory.getChannelRef();
+            factory.bind(ref, 'regular-session-key');
+            assert.strictEqual(factory.isBound('regular-session-key'), true);
+
+            // Advance time by slightly more than 3 minutes (180000ms)
+            Date.now = () => 1000 + 180001;
+
+            // Manually trigger the private cleanup method
+            factory.cleanupIdleKeys();
+
+            // It should still be bound because bind() ignores TTL tracking
+            assert.strictEqual(factory.isBound('regular-session-key'), true);
+            factory.close();
+          });
+
+          it('should correctly isolate cleanup when both custom and regular keys are present', () => {
+            const factory = new grpcGcp.GcpChannelFactory(
+              'hostname',
+              insecureCreds,
+              {}
+            );
+            Date.now = () => 1000;
+            const ref = factory.getChannelRef();
+
+            // Bind a custom transaction key
+            factory.bindIfUnbound(ref, 'custom-tx-key');
+            // Bind a regular session key
+            factory.bind(ref, 'regular-session-key');
+
+            assert.strictEqual(factory.isBound('custom-tx-key'), true);
+            assert.strictEqual(factory.isBound('regular-session-key'), true);
+
+            // Advance time by slightly more than 3 minutes (180000ms)
+            Date.now = () => 1000 + 180001;
+
+            // Mock getAffinityCount to 0 to bypass the legacy grpc-gcp-node
+            // bug where unbind doesn't delete keys if affinityCount > 0
+            ref.getAffinityCount = () => 0;
+            factory.cleanupIdleKeys();
+
+            // Custom key should be cleaned up, regular key should survive
+            assert.strictEqual(factory.isBound('custom-tx-key'), false);
+            assert.strictEqual(factory.isBound('regular-session-key'), true);
+            factory.close();
+          });
+
+          it('getChannelRef should not accidentally start a timer for regular session keys', () => {
+            const factory = new grpcGcp.GcpChannelFactory(
+              'hostname',
+              insecureCreds,
+              {}
+            );
+            Date.now = () => 1000;
+            const ref = factory.getChannelRef();
+
+            factory.bind(ref, 'regular-session-key');
+
+            // Advance time by 2 minutes and access it
+            Date.now = () => 1000 + 120000;
+            factory.getChannelRef('regular-session-key'); // Simulating network activity
+
+            // Advance time by another 2 minutes (total 4)
+            Date.now = () => 1000 + 240000;
+
+            factory.cleanupIdleKeys();
+
+            // It should still be bound because getChannelRef doesn't track keys missing from TTL map
+            assert.strictEqual(factory.isBound('regular-session-key'), true);
+            factory.close();
+          });
         });
       });
       describe('close', () => {
