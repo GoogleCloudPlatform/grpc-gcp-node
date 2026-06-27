@@ -415,6 +415,21 @@ for (const grpcLibName of ['grpc', '@grpc/grpc-js']) {
             });
           });
         });
+        it('should automatically unbind when call is cancelled programmatically', done => {
+          const affinityKey = 'custom-key-cancel';
+          client.unary({}, {affinityKey}, err => {
+            assert.ifError(err);
+            assert.strictEqual(pool.isBound(affinityKey), true);
+            const metadata = new grpc.Metadata();
+            const call = client.unary({}, metadata, {affinityKey}, err2 => {
+              assert.ok(err2);
+              assert.strictEqual(err2.code, grpc.status.CANCELLED);
+              assert.strictEqual(pool.isBound(affinityKey), false);
+              done();
+            });
+            call.cancel();
+          });
+        });
       });
     });
   });

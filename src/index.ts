@@ -158,7 +158,9 @@ const setup = (grpc: GrpcModule) => {
               if (boundKey && affinityConfig) {
                 if (
                   (callOptions as any).unbind === true ||
-                  status.code === grpc.status.ABORTED
+                  (affinityKeyFromCallOptions &&
+                    (status.code === grpc.status.ABORTED ||
+                      status.code === grpc.status.CANCELLED))
                 ) {
                   channelFactory.unbind(boundKey);
                 }

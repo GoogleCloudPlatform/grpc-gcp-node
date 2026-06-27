@@ -330,7 +330,14 @@ export function getGcpChannelFactoryClass(
       const boundChannelRef = this.affinityKeyToChannelRef.get(boundKey);
       if (boundChannelRef) {
         boundChannelRef.affinityCountDecr();
-        if (boundChannelRef.getAffinityCount() <= 0) {
+        // SAFEGUARD: If it's a custom multiplexed transaction key (which exists in affinityKeyLastAccessed),
+        // we force delete it to prevent memory leaks, because custom keys are ephemeral.
+        // For legacy keys (regular Spanner sessions), we preserve the old behavior
+        // which waits for the entire channel's affinityCount to hit 0 before deleting.
+        if (
+          this.affinityKeyLastAccessed.has(boundKey) ||
+          boundChannelRef.getAffinityCount() <= 0
+        ) {
           this.affinityKeyToChannelRef.delete(boundKey);
           this.affinityKeyLastAccessed.delete(boundKey);
         }
