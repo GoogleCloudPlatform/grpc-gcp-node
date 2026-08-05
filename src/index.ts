@@ -15,6 +15,7 @@
  * limitations under the License.
  *
  */
+import {performance} from 'perf_hooks';
 import * as grpcType from '@grpc/grpc-js';
 import {GrpcInterface} from './grpc_interface';
 import * as util from 'util';
@@ -102,7 +103,8 @@ const setup = (grpc: GrpcModule) => {
       channelFactory,
       affinityConfig,
       argument,
-      affinityKeyFromCallOptions
+      affinityKeyFromCallOptions,
+      callOptions
     );
     const channelRef = preProcessResult.channelRef;
 
@@ -226,8 +228,14 @@ const setup = (grpc: GrpcModule) => {
     affinityConfig?: any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     argument?: any,
-    overrideAffinityKey?: string
+    overrideAffinityKey?: string,
+    callOptions?: any // Pass callOptions into preProcess
   ): {boundKey: string | undefined; channelRef: ChannelRef} {
+    const currentReqId = (callOptions as any)?.reqId || '';
+    if (currentReqId) {
+      performance.mark(`M2_gcp_start_${currentReqId}`);
+    }
+
     let boundKey = overrideAffinityKey;
     if (!boundKey && argument && affinityConfig) {
       const command = affinityConfig.command;
@@ -246,6 +254,10 @@ const setup = (grpc: GrpcModule) => {
 
     if (overrideAffinityKey) {
       channelFactory.bindIfUnbound(channelRef, overrideAffinityKey);
+    }
+
+    if (currentReqId) {
+      performance.mark(`M2_gcp_end_${currentReqId}`);
     }
 
     return {
