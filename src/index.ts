@@ -117,6 +117,9 @@ const setup = (grpc: GrpcModule) => {
     ): grpcType.InterceptingCall => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let firstMessage: any;
+      const currentReqId = (callOptions as any)?.reqId || '';
+      let m3GcpHeaderMarked = false;
+      let m3GcpDataMarked = false;
 
       const requester = {
         start: (
@@ -129,10 +132,18 @@ const setup = (grpc: GrpcModule) => {
               metadata: grpcType.Metadata,
               next: Function
             ) => {
+              if (!m3GcpHeaderMarked && currentReqId) {
+                m3GcpHeaderMarked = true;
+                performance.mark(`M3_gcp_header_recv_${currentReqId}`);
+              }
               next(metadata);
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onReceiveMessage: (message: any, next: Function) => {
+              if (!m3GcpDataMarked && currentReqId) {
+                m3GcpDataMarked = true;
+                performance.mark(`M3_gcp_data_recv_${currentReqId}`);
+              }
               if (!firstMessage) firstMessage = message;
               next(message);
             },
